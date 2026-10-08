@@ -14,6 +14,7 @@ import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import { MentionTextField, type MentionUser } from "./mention-text-field";
 
 export interface ComposerImage {
   id: string;
@@ -39,6 +40,10 @@ interface PostComposerProps {
   onRemoveImage?: (id: string) => void;
   submitting?: boolean;
   error?: string | null;
+  /** Autocompletado de @menciones. */
+  mentionSuggestions?: MentionUser[];
+  onMentionQuery?: (query: string | null) => void;
+  onMention?: (user: MentionUser) => void;
 }
 
 export const PostComposer = ({
@@ -57,6 +62,9 @@ export const PostComposer = ({
   onRemoveImage,
   submitting = false,
   error,
+  mentionSuggestions = [],
+  onMentionQuery = () => {},
+  onMention = () => {},
 }: PostComposerProps) => {
   const fileInput = useRef<HTMLInputElement>(null);
   const uploading = images.some((image) => image.uploading);
@@ -78,9 +86,12 @@ export const PostComposer = ({
           {user.name.charAt(0)}
         </Avatar>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <TextField
+          <MentionTextField
             value={value}
-            onChange={(event) => onChange(event.target.value)}
+            onChange={onChange}
+            suggestions={mentionSuggestions}
+            onMentionQuery={onMentionQuery}
+            onMention={onMention}
             onKeyDown={(event) => {
               if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
                 submit(event);

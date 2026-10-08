@@ -5,7 +5,7 @@ import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
-import TextField from "@mui/material/TextField";
+import { MentionTextField, type MentionUser } from "./mention-text-field";
 
 interface CommentComposerProps {
   user: { name: string; image?: string };
@@ -18,6 +18,10 @@ interface CommentComposerProps {
   submitting?: boolean;
   autoFocus?: boolean;
   maxLength?: number;
+  /** Autocompletado de @menciones. */
+  mentionSuggestions?: MentionUser[];
+  onMentionQuery?: (query: string | null) => void;
+  onMention?: (user: MentionUser) => void;
 }
 
 export const CommentComposer = ({
@@ -31,6 +35,9 @@ export const CommentComposer = ({
   submitting = false,
   autoFocus,
   maxLength,
+  mentionSuggestions = [],
+  onMentionQuery = () => {},
+  onMention = () => {},
 }: CommentComposerProps) => {
   const empty = !value.trim();
 
@@ -51,9 +58,12 @@ export const CommentComposer = ({
         {user.name.charAt(0)}
       </Avatar>
       <Stack spacing={1} sx={{ flex: 1, minWidth: 0 }}>
-        <TextField
+        <MentionTextField
           value={value}
-          onChange={(event) => onChange(event.target.value)}
+          onChange={onChange}
+          suggestions={mentionSuggestions}
+          onMentionQuery={onMentionQuery}
+          onMention={onMention}
           onKeyDown={(event) => {
             if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
               submit(event);

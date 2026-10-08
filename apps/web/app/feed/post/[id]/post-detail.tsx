@@ -21,11 +21,30 @@ import { CommentItem } from "@repo/ui/feed/comment-item";
 import { PostCardSkeleton } from "@repo/ui/feed/post-card-skeleton";
 import { profileHref } from "../../../../lib/routes";
 import { ActivityPostCard } from "../../activity-post-card";
+import { RequireFeedsClient } from "../../require-feeds-client";
+import { useMentions } from "../../use-mentions";
 
 const COMMENTS_PAGE_SIZE = 20;
 const MAX_COMMENT_LENGTH = 2000;
 
 type Author = { name: string; image?: string; href?: string };
+
+const BackToFeed = () => (
+  <Button
+    component={Link}
+    href="/feed"
+    startIcon={<ArrowBackIcon />}
+    sx={{ alignSelf: "flex-start", color: "text.secondary" }}
+  >
+    Volver al feed
+  </Button>
+);
+
+const mentionsOf = (comment: CommentResponse) =>
+  comment.mentioned_users.map((user) => ({
+    name: user.name ?? user.id,
+    href: profileHref(user.id),
+  }));
 
 const authorOf = (comment: CommentResponse): Author => ({
   name: comment.user.name ?? comment.user.id,
@@ -50,6 +69,7 @@ const ConnectedCommentComposer = ({
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(false);
+  const mentions = useMentions();
 
   if (!client || !user) return null;
 
@@ -62,8 +82,13 @@ const ConnectedCommentComposer = ({
         object_type: "activity",
         comment: text.trim(),
         ...(parentId && { parent_id: parentId }),
+        mentioned_user_ids: mentions.mentionedIds(text),
+        // Avisa al autor del post (o del comentario, si es respuesta) y a
+        // los mencionados.
+        create_notification_activity: true,
       });
       setText("");
+      mentions.reset();
       onDone?.();
     } catch (commentError) {
       console.error("[stream] no se pudo comentar", commentError);
@@ -86,6 +111,9 @@ const ConnectedCommentComposer = ({
         submitting={submitting}
         autoFocus={autoFocus}
         maxLength={MAX_COMMENT_LENGTH}
+        mentionSuggestions={mentions.suggestions}
+        onMentionQuery={mentions.onMentionQuery}
+        onMention={mentions.onMention}
       />
       {error && (
         <Alert severity="error">
@@ -120,6 +148,7 @@ const CommentThread = ({
       author={authorOf(comment)}
       createdAt={new Date(comment.created_at)}
       text={comment.text}
+      mentions={mentionsOf(comment)}
       deleted={comment.status === "deleted"}
       onReply={() => setReplying(true)}
     >
@@ -131,6 +160,7 @@ const CommentThread = ({
             author={authorOf(reply)}
             createdAt={new Date(reply.created_at)}
             text={reply.text}
+            mentions={mentionsOf(reply)}
             deleted={reply.status === "deleted"}
             onReply={() => setReplying(true)}
           />
@@ -204,7 +234,7 @@ const Comments = ({ activity }: { activity: ActivityWithStateUpdates }) => {
   );
 };
 
-export const PostDetail = ({ activityId }: { activityId: string }) => {
+const ConnectedPostDetail = ({ activityId }: { activityId: string }) => {
   const client = useFeedsClient();
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
@@ -250,14 +280,7 @@ export const PostDetail = ({ activityId }: { activityId: string }) => {
 
   return (
     <Stack spacing={2}>
-      <Button
-        component={Link}
-        href="/feed"
-        startIcon={<ArrowBackIcon />}
-        sx={{ alignSelf: "flex-start", color: "text.secondary" }}
-      >
-        Volver al feed
-      </Button>
+      <BackToFeed />
 
       {status === "loading" && <PostCardSkeleton />}
       {status === "error" && (
@@ -274,3 +297,16 @@ export const PostDetail = ({ activityId }: { activityId: string }) => {
     </Stack>
   );
 };
+
+export const PostDetail = ({ activityId }: { activityId: string }) => (
+  <RequireFeedsClient
+    fallback={
+      <Stack spacing={2}>
+        <BackToFeed />
+        <PostCardSkeleton />
+      </Stack>
+    }
+  >
+    <ConnectedPostDetail activityId={activityId} />
+  </RequireFeedsClient>
+);

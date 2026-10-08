@@ -7,6 +7,8 @@ import {
 } from "@stream-io/feeds-react-sdk";
 import { PostComposer } from "@repo/ui/feed/post-composer";
 import { createPost } from "./actions";
+import { RequireFeedsClient } from "./require-feeds-client";
+import { useMentions } from "./use-mentions";
 
 const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -22,11 +24,11 @@ interface ComposerImage {
 interface ConnectedPostComposerProps {
   /** Espacios donde el usuario puede publicar; el primero es el inicial. */
   spaces: { id: string; name: string }[];
+  /** Se llama tras publicar con éxito. */
+  onPosted?: () => void;
 }
 
-export const ConnectedPostComposer = ({
-  spaces,
-}: ConnectedPostComposerProps) => {
+const Composer = ({ spaces, onPosted }: ConnectedPostComposerProps) => {
   const client = useFeedsClient();
   const user = useClientConnectedUser();
   const [text, setText] = useState("");
@@ -34,6 +36,7 @@ export const ConnectedPostComposer = ({
   const [images, setImages] = useState<ComposerImage[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mentions = useMentions();
 
   // Libera las vistas previas locales al desmontar.
   const imagesRef = useRef(images);
@@ -97,6 +100,7 @@ export const ConnectedPostComposer = ({
       spaceId,
       text,
       images: images.flatMap((image) => (image.url ? [image.url] : [])),
+      mentionedUserIds: mentions.mentionedIds(text),
     });
     setSubmitting(false);
     if (!result.ok) {
@@ -106,6 +110,8 @@ export const ConnectedPostComposer = ({
     images.forEach((image) => URL.revokeObjectURL(image.previewUrl));
     setImages([]);
     setText("");
+    mentions.reset();
+    onPosted?.();
   };
 
   if (!user || spaces.length === 0) return null;
@@ -133,6 +139,15 @@ export const ConnectedPostComposer = ({
       onRemoveImage={removeImage}
       submitting={submitting}
       error={error}
+      mentionSuggestions={mentions.suggestions}
+      onMentionQuery={mentions.onMentionQuery}
+      onMention={mentions.onMention}
     />
   );
 };
+
+export const ConnectedPostComposer = (props: ConnectedPostComposerProps) => (
+  <RequireFeedsClient>
+    <Composer {...props} />
+  </RequireFeedsClient>
+);

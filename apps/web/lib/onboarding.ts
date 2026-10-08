@@ -10,9 +10,10 @@ interface StreamUser {
   image?: string | null;
 }
 
-// Deja listo a un usuario en Stream: perfil de usuario, su `timeline` (suyo)
-// y su feed de perfil (`profile`, de `system`). Es idempotente: sin base de
-// datos se ejecuta en cada inicio de sesión tras reiniciar el servidor.
+// Deja listo a un usuario en Stream: perfil de usuario, su `timeline` y sus
+// `notification` (suyos) y su feed de perfil (`profile`, de `system`). Es
+// idempotente: sin base de datos se ejecuta en cada inicio de sesión tras
+// reiniciar el servidor.
 //
 // Solo cuando se crea el timeline se une a todos los espacios; después
 // respeta los que el miembro haya abandonado.
@@ -31,6 +32,12 @@ export const onboardStreamUser = async ({ id, name, image }: StreamUser) => {
       id,
       ownerId: SYSTEM_USER_ID,
       authorId: id,
+    }),
+    // Notificaciones del miembro (comentarios, reacciones y menciones).
+    getOrCreateOwnedFeed(stream, {
+      group: "notification",
+      id,
+      ownerId: id,
     }),
   ]);
 

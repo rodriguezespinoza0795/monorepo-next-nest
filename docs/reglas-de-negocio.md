@@ -20,19 +20,19 @@ Un administrador también es miembro, y cualquier miembro es autor de lo que cre
 
 ## 2. Qué ve cada rol
 
-| Pantalla                             | Visitante           | Miembro                                                  | Administrador                       |
-| ------------------------------------ | ------------------- | -------------------------------------------------------- | ----------------------------------- |
-| `/` (inicio)                         | ✅                  | ✅                                                       | ✅                                  |
-| `/login`                             | ✅                  | Redirige a `/feed`                                       | Redirige a `/feed`                  |
-| `/feed` (Inicio de la comunidad)     | Redirige a `/login` | ✅ Posts de los espacios que sigue                       | ✅                                  |
-| `/feed/[espacio]`                    | Redirige a `/login` | ✅                                                       | ✅                                  |
-| `/feed/post/[id]` (detalle)          | Redirige a `/login` | ✅                                                       | ✅                                  |
-| Composer en Inicio                   | —                   | ✅ Solo puede elegir **General**                         | ✅ Elige **General** o **Anuncios** |
-| Composer en `/feed/anuncios`         | —                   | ❌ No se muestra                                         | ✅                                  |
-| Botón "Unirme" / "Salir del espacio" | —                   | ✅ En cada espacio                                       | ✅                                  |
-| Perfil `/feed/u/[id]`                | Redirige a `/login` | ✅ De cualquier miembro (el propio con la etiqueta "Tú") | ✅                                  |
-| Campana de notificaciones            | —                   | ⏳ PR 5                                                  | ⏳ PR 5                             |
-| `apps/admin` (moderación)            | ❌                  | ❌                                                       | ⏳ PR 6                             |
+| Pantalla                               | Visitante           | Miembro                                                  | Administrador                       |
+| -------------------------------------- | ------------------- | -------------------------------------------------------- | ----------------------------------- |
+| `/` (inicio)                           | ✅                  | ✅                                                       | ✅                                  |
+| `/login`                               | ✅                  | Redirige a `/feed`                                       | Redirige a `/feed`                  |
+| `/feed` (Inicio de la comunidad)       | Redirige a `/login` | ✅ Posts de los espacios que sigue                       | ✅                                  |
+| `/feed/[espacio]`                      | Redirige a `/login` | ✅                                                       | ✅                                  |
+| `/feed/post/[id]` (detalle)            | Redirige a `/login` | ✅                                                       | ✅                                  |
+| Composer en Inicio                     | —                   | ✅ Solo puede elegir **General**                         | ✅ Elige **General** o **Anuncios** |
+| Composer en `/feed/anuncios`           | —                   | ❌ No se muestra                                         | ✅                                  |
+| Botón "Unirme" / "Salir del espacio"   | —                   | ✅ En cada espacio                                       | ✅                                  |
+| Perfil `/feed/u/[id]`                  | Redirige a `/login` | ✅ De cualquier miembro (el propio con la etiqueta "Tú") | ✅                                  |
+| Campana de notificaciones (encabezado) | —                   | ✅ Solo las suyas                                        | ✅ Solo las suyas                   |
+| `apps/admin` (moderación)              | ❌                  | ❌                                                       | ⏳ PR 6                             |
 
 ## 3. Qué puede hacer cada rol
 
@@ -48,6 +48,8 @@ Un administrador también es miembro, y cualquier miembro es autor de lo que cre
 | Dar / quitar "me gusta" a un post                           | ❌        | ✅ (uno por persona) | ✅ (también a lo suyo) | ✅                                           | SDK de Stream en el navegador (`enforce_unique`)              |
 | Comentar un post (también en Anuncios)                      | ❌        | ✅                   | —                      | ✅                                           | SDK de Stream en el navegador                                 |
 | Responder un comentario (1 nivel de hilo)                   | ❌        | ✅                   | —                      | ✅                                           | SDK de Stream en el navegador                                 |
+| Mencionar a un miembro con `@Nombre` (post o comentario)    | ❌        | ✅                   | —                      | ✅                                           | Autocompletado + `createPost` (posts) / SDK (comentarios)     |
+| Ver y marcar sus notificaciones como leídas                 | ❌        | ✅                   | —                      | ✅                                           | SDK de Stream (feed `notification:<streamId>`)                |
 | Editar su post                                              | —         | —                    | ⏳ Sin UI              | ⏳                                           | Stream lo permite por API (ver brechas)                       |
 | Borrar su post                                              | —         | —                    | ⏳ Sin UI              | ⏳                                           | Stream lo permite por API                                     |
 | Editar / borrar su comentario                               | —         | —                    | ⏳ Sin UI              | ⏳                                           | Stream lo permite por API                                     |
@@ -84,22 +86,42 @@ Un administrador también es miembro, y cualquier miembro es autor de lo que cre
 - Los posts publicados antes del PR 4 no aparecen en el perfil (vivían en el feed `user:<streamId>`, que ya no se usa).
 - Stream deja a cualquier usuario **crear** un feed que aún no existe y lo deja como dueño. Por eso el servidor crea los perfiles y timelines con `getOrCreateOwnedFeed` (onboarding, página de perfil y `stream:setup`): si el dueño no es el esperado, transfiere el feed y borra lo que publicó el intruso (verificado).
 
-## 7. Límites y validaciones
+## 7. Notificaciones
 
-| Regla                             | Valor                                   | Dónde se aplica                                            |
-| --------------------------------- | --------------------------------------- | ---------------------------------------------------------- |
-| Largo de un post                  | 1–5000 caracteres (o solo imágenes)     | Composer + `createPost`                                    |
-| Imágenes por post                 | Máx. 4, hasta 10 MB c/u, solo `image/*` | Composer (tamaño/tipo) + `createPost` (cantidad)           |
-| Origen de las imágenes            | Solo `https://*.stream-io-cdn.com`      | `createPost`                                               |
-| Frecuencia de publicación         | 5 posts cada 10 min por miembro         | `createPost` (`lib/rate-limit.ts`, en memoria del proceso) |
-| Largo de un comentario            | 2000 caracteres                         | Solo en el composer (ver brechas)                          |
-| Frecuencia de comentarios y likes | Sin límite propio                       | — (Stream aplica 1000 req/min globales)                    |
-| "Me gusta" por persona y post     | 1                                       | Stream (`enforce_unique`)                                  |
-| Sesión                            | 7 días, se renueva al usarla            | Better Auth (cookie cifrada, sin base de datos)            |
-| Token de Stream                   | 1 hora, se renueva solo                 | `/api/stream/token`                                        |
-| Identidad en Stream               | `g_<sub de Google>`, inmutable          | `mapProfileToUser` + hook `user.update.before`             |
+| Recibe la notificación | Cuando                                      | Texto en la campana                  |
+| ---------------------- | ------------------------------------------- | ------------------------------------ |
+| Autor del post         | Alguien da "me gusta" a su post             | "Ana reaccionó a tu publicación"     |
+| Autor del post         | Alguien comenta su post                     | "Ana comentó tu publicación"         |
+| Autor del comentario   | Alguien responde su comentario              | "Ana respondió a tu comentario"      |
+| Miembro mencionado     | Lo mencionan con `@Nombre` en un post       | "Ana te mencionó en una publicación" |
+| Miembro mencionado     | Lo mencionan con `@Nombre` en un comentario | "Ana te mencionó en un comentario"   |
 
-## 8. Brechas conocidas
+- Las propias acciones no notifican (verificado: un like o comentario en tu propio post no te crea notificación).
+- Quitar un "me gusta" borra su notificación.
+- Las notificaciones **no cuentan** para el tope de 5k actividades al mes (confirmado en el dashboard el 2026-10-08: 5 notificaciones de likes no movieron el contador).
+- Stream agrupa por publicación, tipo y día: "Ana y 2 personas más comentaron tu publicación".
+- El globo cuenta las **no vistas**; al abrir la campana se marcan todas como vistas. Cada notificación queda **leída** al abrirla, o todas con "Marcar todo como leído".
+- Cada notificación lleva a la publicación (`/feed/post/<id>`).
+- El feed `notification:<streamId>` es del miembro; lo crea el onboarding con `getOrCreateOwnedFeed` (si alguien se adelantó solo se transfiere: las notificaciones las crean otros, así que no se borra nada).
+
+## 8. Límites y validaciones
+
+| Regla                             | Valor                                             | Dónde se aplica                                            |
+| --------------------------------- | ------------------------------------------------- | ---------------------------------------------------------- |
+| Largo de un post                  | 1–5000 caracteres (o solo imágenes)               | Composer + `createPost`                                    |
+| Imágenes por post                 | Máx. 4, hasta 10 MB c/u, solo `image/*`           | Composer (tamaño/tipo) + `createPost` (cantidad)           |
+| Origen de las imágenes            | Solo `https://*.stream-io-cdn.com`                | `createPost`                                               |
+| Frecuencia de publicación         | 5 posts cada 10 min por miembro                   | `createPost` (`lib/rate-limit.ts`, en memoria del proceso) |
+| Largo de un comentario            | 2000 caracteres                                   | Solo en el composer (ver brechas)                          |
+| Menciones en un post              | Máx. 10, solo miembros que existen, sin uno mismo | `createPost`                                               |
+| Menciones en un comentario        | Las elegidas en el autocompletado                 | Solo en el composer (ver brechas)                          |
+| Frecuencia de comentarios y likes | Sin límite propio                                 | — (Stream aplica 1000 req/min globales)                    |
+| "Me gusta" por persona y post     | 1                                                 | Stream (`enforce_unique`)                                  |
+| Sesión                            | 7 días, se renueva al usarla                      | Better Auth (cookie cifrada, sin base de datos)            |
+| Token de Stream                   | 1 hora, se renueva solo                           | `/api/stream/token`                                        |
+| Identidad en Stream               | `g_<sub de Google>`, inmutable                    | `mapProfileToUser` + hook `user.update.before`             |
+
+## 9. Brechas conocidas
 
 Reglas que hoy dependen solo de la interfaz o que Stream no hace cumplir como queremos. Cada una debe cerrarse en el PR indicado o antes de producción.
 
@@ -110,8 +132,9 @@ Reglas que hoy dependen solo de la interfaz o que Stream no hace cumplir como qu
 5. **Límite de frecuencia por proceso.** Con varias instancias del servidor cada una cuenta por separado.
 6. **El administrador no es admin en Stream.** Puede publicar en Anuncios (por el servidor), pero aún no puede borrar contenido ajeno ni banear: llega en **PR 6**, que debe hacerlo desde el servidor.
 7. **`own_capabilities` de Stream no es confiable para la UI.** En espacios `visible` sigue listando `add-activity` aunque publicar devuelve 403; la UI decide con `canPostIn` (`lib/spaces.ts`).
+8. **Menciones en comentarios sin validar en el servidor.** Van directo del navegador a Stream: con la API, un miembro podría mencionar ids arbitrarios (hasta spam de notificaciones). Los posts sí se validan en `createPost`.
 
-## 9. Dónde vive cada regla en el código
+## 10. Dónde vive cada regla en el código
 
 | Regla                              | Archivo                                                       |
 | ---------------------------------- | ------------------------------------------------------------- |
@@ -125,4 +148,6 @@ Reglas que hoy dependen solo de la interfaz o que Stream no hace cumplir como qu
 | Ids de feeds y usuario `system`    | `apps/web/lib/feeds.ts`                                       |
 | Dueño de perfiles y timelines      | `apps/web/lib/owned-feed.ts` (`getOrCreateOwnedFeed`)         |
 | Unirse / salir de un espacio       | `apps/web/app/feed/space-membership-button.tsx`               |
+| Notificaciones (campana y textos)  | `apps/web/app/feed/notifications-menu.tsx`                    |
+| Menciones (autocompletado)         | `apps/web/app/feed/use-mentions.ts`                           |
 | Acceso a páginas                   | `apps/web/app/feed/layout.tsx`, `apps/web/app/login/page.tsx` |
