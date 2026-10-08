@@ -12,13 +12,12 @@ import {
   StreamFeed,
   useFeedActivities,
   useFeedsClient,
-  type ActivityResponse,
   type Feed,
 } from "@stream-io/feeds-react-sdk";
 import { EmptyState } from "@repo/ui/feed/empty-state";
-import { PostCard } from "@repo/ui/feed/post-card";
 import { PostCardSkeleton } from "@repo/ui/feed/post-card-skeleton";
-import { findSpace } from "../../lib/spaces";
+import { ActivityPostCard } from "./activity-post-card";
+import { ConnectedPostComposer } from "./connected-post-composer";
 
 const PAGE_SIZE = 10;
 
@@ -27,21 +26,9 @@ interface ActivityFeedProps {
   feedId: string;
   title: string;
   description: string;
+  /** Espacios donde el usuario puede publicar desde este feed. */
+  postableSpaces?: { id: string; name: string }[];
 }
-
-// Nombre del espacio donde se publicó la actividad (`space:<id>`).
-const spaceName = (activity: ActivityResponse) => {
-  const fid = activity.feeds.find((feed) => feed.startsWith("space:"));
-  return fid ? findSpace(fid.slice("space:".length))?.name : undefined;
-};
-
-const imagesOf = (activity: ActivityResponse) =>
-  activity.attachments
-    .filter((attachment) => attachment.type === "image" && attachment.image_url)
-    .map((attachment) => ({
-      url: attachment.image_url as string,
-      alt: attachment.title,
-    }));
 
 const ActivityList = ({
   feed,
@@ -81,18 +68,11 @@ const ActivityList = ({
   return (
     <Stack spacing={2}>
       {activities.map((activity) => (
-        <PostCard
+        <ActivityPostCard
           key={activity.id}
-          author={{
-            name: activity.user.name ?? activity.user.id,
-            image: activity.user.image,
-          }}
-          createdAt={new Date(activity.created_at)}
-          text={activity.text}
-          space={showSpace ? spaceName(activity) : undefined}
-          images={imagesOf(activity)}
-          reactionCount={activity.reaction_count}
-          commentCount={activity.comment_count}
+          activity={activity}
+          showSpace={showSpace}
+          linkToDetail
         />
       ))}
       <Box ref={sentinel} />
@@ -120,6 +100,7 @@ export const ActivityFeed = ({
   feedId,
   title,
   description,
+  postableSpaces = [],
 }: ActivityFeedProps) => {
   const client = useFeedsClient();
   // El SDK empieza con `activities = []` antes de responder; sin este estado
@@ -166,6 +147,10 @@ export const ActivityFeed = ({
         </Typography>
         <Typography color="text.secondary">{description}</Typography>
       </Box>
+
+      {postableSpaces.length > 0 && (
+        <ConnectedPostComposer spaces={postableSpaces} />
+      )}
 
       {status === "error" && (
         <Alert severity="error">

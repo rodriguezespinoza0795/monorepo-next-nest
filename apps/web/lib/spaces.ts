@@ -5,6 +5,8 @@ export interface Space {
   id: string;
   name: string;
   description: string;
+  /** Solo los administradores pueden publicar (los demás leen y comentan). */
+  adminOnly?: boolean;
 }
 
 export const SPACES: Space[] = [
@@ -17,8 +19,12 @@ export const SPACES: Space[] = [
     id: "anuncios",
     name: "Anuncios",
     description: "Novedades del equipo.",
+    adminOnly: true,
   },
 ];
 
 export const findSpace = (id: string) =>
   SPACES.find((space) => space.id === id);
+
+export const canPostIn = (space: Space, isAdmin: boolean) =>
+  !space.adminOnly || isAdmin;

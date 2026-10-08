@@ -1,5 +1,9 @@
 # Notas del proyecto
 
+## Reglas de negocio
+
+Roles, permisos, qué ve cada rol, límites y brechas conocidas de la comunidad están en [`docs/reglas-de-negocio.md`](docs/reglas-de-negocio.md). Respétalas al implementar, y si un cambio agrega o modifica un permiso, un rol, una pantalla o un límite, **actualiza ese documento en el mismo PR**.
+
 ## Cambios visuales: siempre en `web` y `admin`
 
 Todo cambio visual (tema, tipografía, colores, layout, componentes de UI, estilos globales) se aplica **siempre en las dos apps**, `apps/web` y `apps/admin`, para que se vean consistentes. No dejes una app con el diseño nuevo y la otra con el anterior.

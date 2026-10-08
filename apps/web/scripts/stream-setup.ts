@@ -31,9 +31,20 @@ const client = new StreamClient(apiKey, secret);
 
 await client.upsertUsers([SYSTEM_USER]);
 
+// Visibilidad `visible`: cualquier usuario lee, comenta, reacciona y sigue,
+// pero solo el dueño del feed (`system`) puede publicar. Los posts de los
+// usuarios entran por la server action `createPost`, que usa el SDK de
+// servidor; así nadie se salta los permisos ni el límite de frecuencia
+// publicando directo con su token. Ver docs/reglas-de-negocio.md.
+const SPACE_VISIBILITY = "visible";
+
 await client.feeds.getOrCreateFeedGroup({
   id: "space",
-  default_visibility: "public",
+  default_visibility: SPACE_VISIBILITY,
+});
+await client.feeds.updateFeedGroup({
+  id: "space",
+  default_visibility: SPACE_VISIBILITY,
 });
 console.log("✓ feed group `space`");
 
@@ -45,8 +56,14 @@ for (const space of SPACES) {
     data: {
       name: space.name,
       description: space.description,
-      visibility: "public",
+      visibility: SPACE_VISIBILITY,
     },
+  });
+  // `getOrCreateFeed` no cambia la visibilidad de un feed que ya existe.
+  await client.feeds.changeFeedVisibility({
+    feed_group_id: "space",
+    feed_id: space.id,
+    visibility: SPACE_VISIBILITY,
   });
   console.log(`✓ space:${space.id}${created ? " (creado)" : ""}`);
 }
