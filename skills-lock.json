@@ -18,6 +18,12 @@
       "sourceType": "github",
       "skillPath": "skills/material-ui-theming/SKILL.md",
       "computedHash": "06f09d0152bf43a8f64d170a67418e7f33ac265bc995e2fed47adb5bcc979a54"
+    },
+    "webapp-testing": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/webapp-testing/SKILL.md",
+      "computedHash": "ad5b1fc52807e9afa4635e59218a026b164dc58b6c3f41b0f7c644dcd6ccf572"
     }
   }
 }

@@ -8,6 +8,31 @@ Todo cambio visual (tema, tipografía, colores, layout, componentes de UI, estil
 - Lo que vive en cada app (`app/layout.tsx`, `app/globals.css`, fuentes con `next/font`) se replica en las dos.
 - Verifica ambas apps (`check-types`, `lint`, `build` y en el navegador: `web` en el puerto 3000, `admin` en el 3001).
 
+## Validación en móvil: siempre después de un cambio visual
+
+Todo cambio visual se valida **también en móvil**, en `web` y en `admin`, antes de darlo por terminado. Se usa la skill `webapp-testing` (Playwright) con el script `.claude/scripts/mobile_check.py`, que emula un iPhone 13 (390×844, táctil) y por cada app:
+
+- toma una captura de página completa,
+- detecta elementos que se salen del ancho de la pantalla (scroll horizontal),
+- reporta errores de consola y excepciones,
+- si el encabezado tiene menú móvil, lo abre y toma una captura.
+
+Con los servidores de desarrollo corriendo (`web` :3000, `admin` :3001):
+
+```sh
+~/.venvs/playwright/bin/python .claude/scripts/mobile_check.py <carpeta-de-capturas> [ruta]
+```
+
+Revisa el reporte **y las capturas**: sin desborde horizontal, sin errores de consola, textos y botones completos y legibles, y menús que abren y cierran. Para validar otra página, pasa su ruta (por ejemplo `/login`).
+
+Si `~/.venvs/playwright` no existe en la máquina, créalo una vez:
+
+```sh
+python3 -m venv ~/.venvs/playwright
+~/.venvs/playwright/bin/pip install playwright
+~/.venvs/playwright/bin/playwright install chromium
+```
+
 ## Diseño: referencia visual
 
 Todo el desarrollo visual debe acercarse lo más posible al estilo de **https://alertametano.com/**. Antes de construir una pantalla nueva, revisa ese sitio y replica su lenguaje visual.
