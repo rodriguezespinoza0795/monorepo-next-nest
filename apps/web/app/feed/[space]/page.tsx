@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import { findSpace } from "../../../lib/spaces";
+import { headers } from "next/headers";
+import { notFound, redirect } from "next/navigation";
+import { isAdmin } from "../../../lib/admins";
+import { auth } from "../../../lib/auth";
+import { canPostIn, findSpace } from "../../../lib/spaces";
 import { ActivityFeed } from "../activity-feed";
 
 export async function generateMetadata({
@@ -16,12 +19,17 @@ export default async function SpacePage({
   const space = findSpace((await params).space);
   if (!space) notFound();
 
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) redirect("/login");
+  const canPost = canPostIn(space, isAdmin(session.user.email));
+
   return (
     <ActivityFeed
       groupId="space"
       feedId={space.id}
       title={space.name}
       description={space.description}
+      postableSpaces={canPost ? [{ id: space.id, name: space.name }] : []}
     />
   );
 }

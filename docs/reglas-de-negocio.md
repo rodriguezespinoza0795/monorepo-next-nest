@@ -1,0 +1,115 @@
+# Reglas de negocio — Comunidad
+
+Fuente de verdad sobre **quién puede hacer qué** en la comunidad (`apps/web`) y su moderación (`apps/admin`). Todo cambio que agregue o modifique un permiso, un rol, una pantalla o un límite **actualiza este documento en el mismo PR**.
+
+Las reglas marcadas como verificadas se probaron contra Stream con un usuario temporal (2026-10-08).
+
+Leyenda: ✅ permitido · ❌ no permitido · ⏳ pendiente (se indica el PR del plan) · — no aplica
+
+## 1. Roles
+
+| Rol               | Quién es                                                                          | Cómo se determina                                                                                                              |
+| ----------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Visitante**     | Persona sin sesión                                                                | No hay cookie de sesión válida                                                                                                 |
+| **Miembro**       | Cualquier persona que inició sesión con Google                                    | Sesión de Better Auth; en Stream es un usuario con rol `user` e id `g_<sub de Google>`                                         |
+| **Autor (owner)** | El miembro que creó un post, comentario o reacción, **respecto de ese contenido** | `activity.user.id` / `comment.user.id` es su `streamId`                                                                        |
+| **Administrador** | Miembro del equipo                                                                | Su correo está en `ADMIN_EMAILS`. Es un rol **de la app**: en Stream sigue siendo `user` (ver [brechas](#7-brechas-conocidas)) |
+| **Sistema**       | Usuario técnico `system` ("Equipo getStream")                                     | Dueño de los espacios y autor de los posts de bienvenida; solo lo usa el servidor                                              |
+
+Un administrador también es miembro, y cualquier miembro es autor de lo que crea.
+
+## 2. Qué ve cada rol
+
+| Pantalla                         | Visitante           | Miembro                            | Administrador                       |
+| -------------------------------- | ------------------- | ---------------------------------- | ----------------------------------- |
+| `/` (inicio)                     | ✅                  | ✅                                 | ✅                                  |
+| `/login`                         | ✅                  | Redirige a `/feed`                 | Redirige a `/feed`                  |
+| `/feed` (Inicio de la comunidad) | Redirige a `/login` | ✅ Posts de los espacios que sigue | ✅                                  |
+| `/feed/[espacio]`                | Redirige a `/login` | ✅                                 | ✅                                  |
+| `/feed/post/[id]` (detalle)      | Redirige a `/login` | ✅                                 | ✅                                  |
+| Composer en Inicio               | —                   | ✅ Solo puede elegir **General**   | ✅ Elige **General** o **Anuncios** |
+| Composer en `/feed/anuncios`     | —                   | ❌ No se muestra                   | ✅                                  |
+| Perfil `/u/[id]`                 | —                   | ⏳ PR 4                            | ⏳ PR 4                             |
+| Campana de notificaciones        | —                   | ⏳ PR 5                            | ⏳ PR 5                             |
+| `apps/admin` (moderación)        | ❌                  | ❌                                 | ⏳ PR 6                             |
+
+## 3. Qué puede hacer cada rol
+
+| Acción                                    | Visitante | Miembro                   | Autor (sobre lo suyo)  | Administrador                                | Dónde se aplica                                  |
+| ----------------------------------------- | --------- | ------------------------- | ---------------------- | -------------------------------------------- | ------------------------------------------------ |
+| Iniciar sesión (solo Google)              | ✅        | —                         | —                      | —                                            | Better Auth                                      |
+| Leer posts y comentarios de los espacios  | ❌        | ✅                        | —                      | ✅                                           | Página (sesión) + Stream (`visible`)             |
+| Publicar en **General**                   | ❌        | ✅                        | —                      | ✅                                           | Server action `createPost`                       |
+| Publicar en **Anuncios**                  | ❌        | ❌                        | —                      | ✅                                           | UI + `createPost` (`adminOnly`)                  |
+| Publicar directo con la API de Stream     | ❌        | ❌ (403)                  | —                      | ❌ (403)                                     | Stream: espacios con visibilidad `visible`       |
+| Adjuntar imágenes a un post               | ❌        | ✅ (ver límites)          | —                      | ✅                                           | Composer + `createPost`                          |
+| Dar / quitar "me gusta" a un post         | ❌        | ✅ (uno por persona)      | ✅ (también a lo suyo) | ✅                                           | SDK de Stream en el navegador (`enforce_unique`) |
+| Comentar un post (también en Anuncios)    | ❌        | ✅                        | —                      | ✅                                           | SDK de Stream en el navegador                    |
+| Responder un comentario (1 nivel de hilo) | ❌        | ✅                        | —                      | ✅                                           | SDK de Stream en el navegador                    |
+| Editar su post                            | —         | —                         | ⏳ Sin UI              | ⏳                                           | Stream lo permite por API (ver brechas)          |
+| Borrar su post                            | —         | —                         | ⏳ Sin UI              | ⏳                                           | Stream lo permite por API                        |
+| Editar / borrar su comentario             | —         | —                         | ⏳ Sin UI              | ⏳                                           | Stream lo permite por API                        |
+| Editar o borrar contenido **ajeno**       | ❌        | ❌ (403 verificado)       | —                      | ⏳ PR 6                                      | Stream                                           |
+| Unirse / salir de un espacio              | ❌        | ⏳ PR 4 (hoy sigue todos) | —                      | ⏳ PR 4                                      | —                                                |
+| Crear o editar espacios                   | ❌        | ❌                        | —                      | ✅ Solo con `stream:setup` y `lib/spaces.ts` | Código + script                                  |
+| Bloquear / banear usuarios                | ❌        | ❌                        | —                      | ⏳ PR 6                                      | —                                                |
+| Cambiar su `streamId`                     | —         | ❌ (400)                  | —                      | ❌                                           | Hook de Better Auth                              |
+
+## 4. El autor (owner) de un post
+
+- El autor es quien lo publicó: `activity.user.id === streamId` del miembro. No se transfiere.
+- Los posts de usuarios se publican **siempre** desde el servidor (`createPost`) con su `streamId` como autor; el cliente no puede elegir otro autor.
+- Un post vive en dos feeds: `space:<espacio>` (lo que leen los demás) y `user:<streamId>` (su perfil, ⏳ PR 4).
+- Hoy el autor **no tiene en la UI** acciones extra sobre su post (editar/borrar). Cuando se agreguen (⏳), deben pasar por el servidor con las mismas validaciones de `createPost`.
+- Los posts del **Sistema** (bienvenida) solo los cambia el script `stream:setup`.
+
+## 5. Espacios
+
+| Espacio    | Quién publica        | Quién lee y comenta | Lo sigue el timeline de Inicio |
+| ---------- | -------------------- | ------------------- | ------------------------------ |
+| `general`  | Miembros y admins    | Miembros            | Todos (automático al entrar)   |
+| `anuncios` | Solo administradores | Miembros            | Todos (automático al entrar)   |
+
+- Los espacios se definen en `apps/web/lib/spaces.ts` (`adminOnly` marca los de solo-admin) y se crean con `pnpm --filter web stream:setup`.
+- En Stream son feeds del grupo `space`, dueño `system`, visibilidad **`visible`**: cualquier usuario lee, comenta, reacciona y sigue, pero solo el dueño puede publicar. Por eso los posts de usuarios entran por el servidor.
+- Al iniciar sesión, el timeline de cada miembro sigue **todos** los espacios (onboarding en `lib/onboarding.ts`).
+
+## 6. Límites y validaciones
+
+| Regla                             | Valor                                   | Dónde se aplica                                            |
+| --------------------------------- | --------------------------------------- | ---------------------------------------------------------- |
+| Largo de un post                  | 1–5000 caracteres (o solo imágenes)     | Composer + `createPost`                                    |
+| Imágenes por post                 | Máx. 4, hasta 10 MB c/u, solo `image/*` | Composer (tamaño/tipo) + `createPost` (cantidad)           |
+| Origen de las imágenes            | Solo `https://*.stream-io-cdn.com`      | `createPost`                                               |
+| Frecuencia de publicación         | 5 posts cada 10 min por miembro         | `createPost` (`lib/rate-limit.ts`, en memoria del proceso) |
+| Largo de un comentario            | 2000 caracteres                         | Solo en el composer (ver brechas)                          |
+| Frecuencia de comentarios y likes | Sin límite propio                       | — (Stream aplica 1000 req/min globales)                    |
+| "Me gusta" por persona y post     | 1                                       | Stream (`enforce_unique`)                                  |
+| Sesión                            | 7 días, se renueva al usarla            | Better Auth (cookie cifrada, sin base de datos)            |
+| Token de Stream                   | 1 hora, se renueva solo                 | `/api/stream/token`                                        |
+| Identidad en Stream               | `g_<sub de Google>`, inmutable          | `mapProfileToUser` + hook `user.update.before`             |
+
+## 7. Brechas conocidas
+
+Reglas que hoy dependen solo de la interfaz o que Stream no hace cumplir como queremos. Cada una debe cerrarse en el PR indicado o antes de producción.
+
+1. **Feed de perfil abierto para su dueño.** Un miembro puede publicar directo con la API en su propio `user:<streamId>`, sin pasar por `createPost` (sin límites ni validación; verificado: 201). Hoy no se muestra en ningún lado; **cerrar en PR 4** antes de mostrar perfiles.
+2. **Editar el propio post por API.** Stream deja al autor editar su post con su token, saltándose las validaciones de `createPost` (largo, imágenes del CDN; verificado: acepta 6000 caracteres). Cerrar cuando se agregue edición (⏳), por ejemplo validando en servidor o revisando permisos de Stream.
+3. **Comentarios y likes sin límite propio.** Van directo del navegador a Stream. **No cuentan** para el tope de 5k actividades al mes del plan gratuito (confirmado en el dashboard el 2026-10-08: solo suman los posts, incluidos los `upsert` y los que luego se borran), pero sí consumen llamadas a la API (125k/mes). Si hay abuso, pasarlos por el servidor con límite.
+4. **Largo de comentarios solo en el cliente.** La API acepta comentarios más largos (verificado: 3000 caracteres).
+5. **Límite de frecuencia por proceso.** Con varias instancias del servidor cada una cuenta por separado.
+6. **El administrador no es admin en Stream.** Puede publicar en Anuncios (por el servidor), pero aún no puede borrar contenido ajeno ni banear: llega en **PR 6**, que debe hacerlo desde el servidor.
+7. **`own_capabilities` de Stream no es confiable para la UI.** En espacios `visible` sigue listando `add-activity` aunque publicar devuelve 403; la UI decide con `canPostIn` (`lib/spaces.ts`).
+
+## 8. Dónde vive cada regla en el código
+
+| Regla                              | Archivo                                                       |
+| ---------------------------------- | ------------------------------------------------------------- |
+| Roles de administrador             | `apps/web/lib/admins.ts` (`ADMIN_EMAILS`)                     |
+| Espacios y quién publica           | `apps/web/lib/spaces.ts` (`adminOnly`, `canPostIn`)           |
+| Publicar (validaciones y permisos) | `apps/web/app/feed/actions.ts` (`createPost`)                 |
+| Límite de frecuencia               | `apps/web/lib/rate-limit.ts`                                  |
+| Sesión e identidad                 | `apps/web/lib/auth.ts`                                        |
+| Onboarding (seguir espacios)       | `apps/web/lib/onboarding.ts`                                  |
+| Permisos en Stream (visibilidad)   | `apps/web/scripts/stream-setup.ts`                            |
+| Acceso a páginas                   | `apps/web/app/feed/layout.tsx`, `apps/web/app/login/page.tsx` |
