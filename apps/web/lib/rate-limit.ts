@@ -31,7 +31,10 @@ export type RateLimitKind = keyof typeof limiters;
  */
 export const takeRateLimit = async (kind: RateLimitKind, key: string) => {
   try {
-    const { success } = await limiters[kind].limit(key);
+    const { success, reason } = await limiters[kind].limit(key);
+    if (reason === "timeout") {
+      console.warn(`[rate-limit] Upstash tardó demasiado (${kind}); se permite`);
+    }
     return success;
   } catch (error) {
     console.error("[rate-limit] Upstash no respondió; se permite", error);

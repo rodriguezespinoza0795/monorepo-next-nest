@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    name: Tipos, lint y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # El build importa los módulos de servidor, que necesitan variables al
+    # cargarse (Better Auth exige su secreto; el cliente de Stream firma un
+    # token). Aquí van valores de relleno: no se conecta a ningún servicio.
+    env:
+      NEXT_PUBLIC_STREAM_API_KEY: ci-placeholder
+      STREAM_API_SECRET: ci-placeholder-secret
+      GOOGLE_CLIENT_ID: ci-placeholder
+      GOOGLE_CLIENT_SECRET: ci-placeholder
+      BETTER_AUTH_SECRET: ci-placeholder-secret-at-least-32-chars-long
+      BETTER_AUTH_URL: http://localhost:3000
+      ADMIN_EMAILS: ci@example.test
+      UPSTASH_REDIS_REST_URL: https://ci-placeholder.upstash.io
+      UPSTASH_REDIS_REST_TOKEN: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check-types
+      - run: pnpm lint
+      - run: pnpm build

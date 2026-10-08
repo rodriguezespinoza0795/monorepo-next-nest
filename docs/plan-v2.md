@@ -1,6 +1,6 @@
 # Plan v2 — Comunidad
 
-Estado: **en curso** (empezado el 2026-10-08). Hecho: PR 1 (validaciones y límites) y PR 2 (editar y borrar lo propio, rama `feat/v2-edit-own`). Decisiones tomadas: Upstash Redis para el límite compartido; Fase A primero. El plan v1 (6 PRs: login, feed, publicar e interactuar, espacios y perfil, notificaciones y moderación) está completo.
+Estado: **en curso** (empezado el 2026-10-08). Hecho: PR 1 (validaciones y límites), PR 2 (editar y borrar lo propio) y PR 3 (pruebas automáticas y CI, rama `feat/v2-tests-ci`). Decisiones tomadas: Upstash Redis para el límite compartido; Fase A primero. El plan v1 (6 PRs: login, feed, publicar e interactuar, espacios y perfil, notificaciones y moderación) está completo.
 
 Objetivo: dejar la comunidad lista para producción y acercarla más a Circle, manteniendo la arquitectura actual: Stream Activity Feeds v3 en el plan gratuito, Better Auth sin base de datos y sin servidores propios. Primero la calidad, después las funciones.
 
@@ -32,7 +32,7 @@ Las brechas citadas son las de [`reglas-de-negocio.md`](reglas-de-negocio.md#10-
 
 1. **Hosting:** ¿Vercel u otro?
 2. **Límite de frecuencia compartido:** ¿Upstash Redis (plan gratis) o dejarlo por proceso y documentarlo?
-3. **App de Stream de pruebas:** crearla en el dashboard y pasar su API key y secreto para `.env` de pruebas.
+3. ~~**App de Stream de pruebas.**~~ Creada; sus credenciales van en `apps/web/.env.test.local` y en los secrets del repo para el workflow E2E.
 4. **Orden:** recomendado empezar por la Fase A (PR 1 → 4) y luego la Fase B.
 
 ## Cosas a tener en cuenta (aprendidas en el v1)

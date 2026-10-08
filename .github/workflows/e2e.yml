@@ -1,0 +1,38 @@
+name: E2E
+
+# Bajo demanda (Actions → E2E → Run workflow): usa la app de Stream de
+# pruebas, no la real. Necesita estos secrets del repo:
+#   STREAM_TEST_API_KEY, STREAM_TEST_API_SECRET
+#   UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN (opcionales: sin ellos
+#   se salta la prueba del límite de frecuencia)
+on:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: Pruebas de punta a punta
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      CI: true
+      NEXT_PUBLIC_STREAM_API_KEY: ${{ secrets.STREAM_TEST_API_KEY }}
+      STREAM_API_SECRET: ${{ secrets.STREAM_TEST_API_SECRET }}
+      UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+      UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
+      BETTER_AUTH_SECRET: e2e-ci-secret-at-least-32-characters-long
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter web exec playwright install --with-deps chromium
+      - run: pnpm --filter web test:e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7
