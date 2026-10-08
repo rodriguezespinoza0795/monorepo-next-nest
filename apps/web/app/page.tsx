@@ -43,7 +43,7 @@ export default function Home() {
           { label: "Cómo funciona", href: "#como-funciona" },
           { label: "Contacto", href: "#contacto" },
         ]}
-        action={{ label: "Acceder", href: "#" }}
+        action={{ label: "Acceder", href: "/login" }}
       />
 
       <Box component="main">
