@@ -3,9 +3,11 @@
 // haga falta:
 //   pnpm --filter web stream:setup
 import { StreamClient } from "@stream-io/node-sdk";
+import { SYSTEM_USER_ID } from "../lib/feeds.ts";
+import { getOrCreateOwnedFeed } from "../lib/owned-feed.ts";
 import { SPACES } from "../lib/spaces.ts";
 
-const SYSTEM_USER = { id: "system", name: "Equipo getStream" };
+const SYSTEM_USER = { id: SYSTEM_USER_ID, name: "Equipo getStream" };
 
 // Ids fijos para que volver a correr el script no duplique las publicaciones.
 const WELCOME_POSTS = [
@@ -48,6 +50,29 @@ await client.feeds.updateFeedGroup({
 });
 console.log("✓ feed group `space`");
 
+// Perfiles de miembros (`profile:<streamId>`), también de `system` y
+// `visible`: cualquiera los lee, solo el servidor publica en ellos.
+await client.feeds.getOrCreateFeedGroup({
+  id: "profile",
+  default_visibility: SPACE_VISIBILITY,
+});
+console.log("✓ feed group `profile`");
+
+// Perfiles de los miembros que ya existen (los nuevos los crea el onboarding),
+// para que nadie se adelante a crearlos y quede como dueño.
+const { users: members } = await client.queryUsers({
+  payload: { filter_conditions: { id: { $autocomplete: "g_" } }, limit: 100 },
+});
+for (const member of members.filter((user) => user.id.startsWith("g_"))) {
+  await getOrCreateOwnedFeed(client, {
+    group: "profile",
+    id: member.id,
+    ownerId: SYSTEM_USER_ID,
+    authorId: member.id,
+  });
+}
+console.log(`✓ perfiles de ${members.length} miembros`);
+
 for (const space of SPACES) {
   const { created } = await client.feeds.getOrCreateFeed({
     feed_group_id: "space",
@@ -68,13 +93,25 @@ for (const space of SPACES) {
   console.log(`✓ space:${space.id}${created ? " (creado)" : ""}`);
 }
 
-await client.feeds.upsertActivities({
-  activities: WELCOME_POSTS.map((post) => ({
-    id: post.id,
-    type: "post",
-    feeds: [`space:${post.space}`],
-    text: post.text,
-    user_id: SYSTEM_USER.id,
-  })),
+// Solo se publican las que falten: cada post cuenta para el tope mensual de
+// actividades del plan gratuito, aunque sea un upsert de uno existente.
+const { activities: existing } = await client.feeds.queryActivities({
+  filter: { id: { $in: WELCOME_POSTS.map((post) => post.id) } },
+  limit: WELCOME_POSTS.length,
 });
-console.log(`✓ ${WELCOME_POSTS.length} publicaciones de bienvenida`);
+const existingIds = new Set(existing.map((activity) => activity.id));
+const missing = WELCOME_POSTS.filter((post) => !existingIds.has(post.id));
+if (missing.length > 0) {
+  await client.feeds.upsertActivities({
+    activities: missing.map((post) => ({
+      id: post.id,
+      type: "post",
+      feeds: [`space:${post.space}`],
+      text: post.text,
+      user_id: SYSTEM_USER.id,
+    })),
+  });
+}
+console.log(
+  `✓ publicaciones de bienvenida (${missing.length} nuevas, ${existingIds.size} ya existían)`,
+);

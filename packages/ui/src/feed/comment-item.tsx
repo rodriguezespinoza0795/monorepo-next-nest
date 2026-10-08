@@ -1,21 +1,25 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { ElementType, ReactNode } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import { RelativeTime } from "./relative-time";
 
 interface CommentItemProps {
-  author: { name: string; image?: string };
+  /** `href` enlaza al perfil del autor. */
+  author: { name: string; image?: string; href?: string };
   createdAt: Date;
   text?: string;
   deleted?: boolean;
   onReply?: () => void;
   /** Respuestas y composer de respuesta, con sangría bajo el comentario. */
   children?: ReactNode;
+  /** Componente de enlace de la app (por ejemplo `next/link`). */
+  linkComponent?: ElementType;
 }
 
 export const CommentItem = ({
@@ -25,6 +29,7 @@ export const CommentItem = ({
   deleted = false,
   onReply,
   children,
+  linkComponent = "a",
 }: CommentItemProps) => (
   <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
     <Avatar src={author.image} alt={author.name} sx={{ width: 32, height: 32 }}>
@@ -47,7 +52,18 @@ export const CommentItem = ({
           sx={{ alignItems: "baseline", minWidth: 0 }}
         >
           <Typography noWrap sx={{ fontWeight: 600, fontSize: 14 }}>
-            {author.name}
+            {author.href ? (
+              <Link
+                component={linkComponent}
+                href={author.href}
+                color="inherit"
+                underline="hover"
+              >
+                {author.name}
+              </Link>
+            ) : (
+              author.name
+            )}
           </Typography>
           <Typography
             variant="caption"

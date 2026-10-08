@@ -4,7 +4,9 @@ import { notFound, redirect } from "next/navigation";
 import { isAdmin } from "../../../lib/admins";
 import { auth } from "../../../lib/auth";
 import { canPostIn, findSpace } from "../../../lib/spaces";
+import { FeedHeader } from "@repo/ui/feed/feed-header";
 import { ActivityFeed } from "../activity-feed";
+import { SpaceMembershipButton } from "../space-membership-button";
 
 export async function generateMetadata({
   params,
@@ -27,8 +29,17 @@ export default async function SpacePage({
     <ActivityFeed
       groupId="space"
       feedId={space.id}
-      title={space.name}
-      description={space.description}
+      header={
+        <FeedHeader
+          title={space.name}
+          description={space.description}
+          action={<SpaceMembershipButton spaceId={space.id} />}
+        />
+      }
+      empty={{
+        title: "Todavía no hay publicaciones",
+        description: "Cuando alguien publique en este espacio, lo verás aquí.",
+      }}
       postableSpaces={canPost ? [{ id: space.id, name: space.name }] : []}
     />
   );

@@ -63,7 +63,11 @@ export const SignInCard = ({
         disabled={loading}
         onClick={onGoogleSignIn}
         startIcon={
-          loading ? <CircularProgress size={18} color="inherit" /> : <GoogleIcon />
+          loading ? (
+            <CircularProgress size={18} color="inherit" />
+          ) : (
+            <GoogleIcon />
+          )
         }
       >
         Continuar con Google

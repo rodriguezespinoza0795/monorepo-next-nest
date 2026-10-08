@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import ForumOutlinedIcon from "@mui/icons-material/ForumOutlined";
 import {
   StreamFeed,
@@ -21,11 +20,18 @@ import { ConnectedPostComposer } from "./connected-post-composer";
 
 const PAGE_SIZE = 10;
 
-interface ActivityFeedProps {
-  groupId: "timeline" | "space";
-  feedId: string;
+interface EmptyCopy {
   title: string;
   description: string;
+}
+
+interface ActivityFeedProps {
+  groupId: "timeline" | "space" | "profile";
+  feedId: string;
+  /** Encabezado de la página (título, perfil, acciones). */
+  header: ReactNode;
+  /** Texto cuando el feed no tiene publicaciones. */
+  empty: EmptyCopy;
   /** Espacios donde el usuario puede publicar desde este feed. */
   postableSpaces?: { id: string; name: string }[];
 }
@@ -33,9 +39,11 @@ interface ActivityFeedProps {
 const ActivityList = ({
   feed,
   showSpace,
+  empty,
 }: {
   feed: Feed;
   showSpace: boolean;
+  empty: EmptyCopy;
 }) => {
   const { activities, is_loading, has_next_page, loadNextPage } =
     useFeedActivities(feed);
@@ -59,8 +67,8 @@ const ActivityList = ({
     return (
       <EmptyState
         icon={<ForumOutlinedIcon fontSize="inherit" />}
-        title="Todavía no hay publicaciones"
-        description="Cuando alguien publique en este espacio, lo verás aquí."
+        title={empty.title}
+        description={empty.description}
       />
     );
   }
@@ -98,8 +106,8 @@ const ActivityList = ({
 export const ActivityFeed = ({
   groupId,
   feedId,
-  title,
-  description,
+  header,
+  empty,
   postableSpaces = [],
 }: ActivityFeedProps) => {
   const client = useFeedsClient();
@@ -137,16 +145,7 @@ export const ActivityFeed = ({
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography
-          variant="h2"
-          component="h1"
-          sx={{ fontSize: { xs: "1.75rem", sm: "2rem" } }}
-        >
-          {title}
-        </Typography>
-        <Typography color="text.secondary">{description}</Typography>
-      </Box>
+      {header}
 
       {postableSpaces.length > 0 && (
         <ConnectedPostComposer spaces={postableSpaces} />
@@ -166,7 +165,11 @@ export const ActivityFeed = ({
       )}
       {status === "ready" && feed && (
         <StreamFeed feed={feed}>
-          <ActivityList feed={feed} showSpace={groupId === "timeline"} />
+          <ActivityList
+            feed={feed}
+            showSpace={groupId !== "space"}
+            empty={empty}
+          />
         </StreamFeed>
       )}
     </Stack>
