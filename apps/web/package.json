@@ -22,6 +22,8 @@
     "@repo/ui": "workspace:*",
     "@stream-io/feeds-react-sdk": "^1.0.23",
     "@stream-io/node-sdk": "^0.8.11",
+    "@upstash/ratelimit": "^2.2.0",
+    "@upstash/redis": "^1.39.0",
     "better-auth": "^1.7.7",
     "next": "16.3.4",
     "react": "19.2.8",

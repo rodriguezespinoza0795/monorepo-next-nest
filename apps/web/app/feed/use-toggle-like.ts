@@ -5,6 +5,7 @@ import {
   useFeedsClient,
   type ActivityResponse,
 } from "@stream-io/feeds-react-sdk";
+import { withNotificationFallback } from "../../lib/notifications";
 
 const LIKE = "like";
 
@@ -29,13 +30,15 @@ export const useToggleLike = () => {
           delete_notification_activity: true,
         });
       } else {
-        await client.addActivityReaction({
-          activity_id: activity.id,
-          type: LIKE,
-          enforce_unique: true,
-          // Avisa al autor (Stream no notifica los likes propios).
-          create_notification_activity: true,
-        });
+        await withNotificationFallback((notify) =>
+          client.addActivityReaction({
+            activity_id: activity.id,
+            type: LIKE,
+            enforce_unique: true,
+            // Avisa al autor (Stream no notifica los likes propios).
+            create_notification_activity: notify,
+          }),
+        );
       }
     } catch (error) {
       console.error("[stream] no se pudo actualizar el me gusta", error);

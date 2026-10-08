@@ -2,21 +2,31 @@
 
 import { headers } from "next/headers";
 import { isAdmin } from "../../lib/admins";
-import { profileFid, spaceFid, SYSTEM_USER_ID } from "../../lib/feeds";
 import { auth } from "../../lib/auth";
+import { profileFid, spaceFid } from "../../lib/feeds";
 import { isBanned } from "../../lib/membership";
+import { isStreamIdList, validMentions } from "../../lib/mentions";
 import { takeRateLimit } from "../../lib/rate-limit";
 import { canPostIn, findSpace } from "../../lib/spaces";
 import { stream } from "../../lib/stream";
 
 const MAX_TEXT_LENGTH = 5000;
+const MAX_COMMENT_LENGTH = 2000;
 const MAX_IMAGES = 4;
-const POSTS_PER_WINDOW = 5;
-const WINDOW_MS = 10 * 60 * 1000;
-const MAX_MENTIONS = 10;
-const STREAM_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
-export type CreatePostResult = { ok: true } | { ok: false; error: string };
+export type ActionResult = { ok: true } | { ok: false; error: string };
+
+const fail = (error: string): ActionResult => ({ ok: false, error });
+
+// Sesión de un miembro que puede participar (no bloqueado).
+const memberSession = async () => {
+  const session = await auth.api.getSession({ headers: await headers() });
+  if (!session) return fail("Tu sesión expiró. Vuelve a entrar.");
+  if (await isBanned(session.user.streamId)) {
+    return fail("Tu cuenta está suspendida.");
+  }
+  return session;
+};
 
 // Solo se aceptan imágenes subidas al CDN de Stream desde el composer.
 const isStreamCdnUrl = (value: string) => {
@@ -38,11 +48,7 @@ export async function createPost(input: {
   images: string[];
   /** Miembros mencionados con `@Nombre` (reciben una notificación). */
   mentionedUserIds?: string[];
-}): Promise<CreatePostResult> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (!session)
-    return { ok: false, error: "Tu sesión expiró. Vuelve a entrar." };
-
+}): Promise<ActionResult> {
   // Una server action es un endpoint público: no confiar en los tipos.
   if (
     typeof input?.spaceId !== "string" ||
@@ -50,53 +56,39 @@ export async function createPost(input: {
     !Array.isArray(input.images) ||
     !input.images.every((image) => typeof image === "string") ||
     (input.mentionedUserIds !== undefined &&
-      (!Array.isArray(input.mentionedUserIds) ||
-        !input.mentionedUserIds.every(
-          (id) => typeof id === "string" && STREAM_ID.test(id),
-        )))
+      !isStreamIdList(input.mentionedUserIds))
   ) {
-    return { ok: false, error: "Datos inválidos." };
+    return fail("Datos inválidos.");
   }
 
+  const session = await memberSession();
+  if ("ok" in session) return session;
+
   const space = findSpace(input.spaceId);
-  if (!space) return { ok: false, error: "Ese espacio no existe." };
+  if (!space) return fail("Ese espacio no existe.");
   if (!canPostIn(space, isAdmin(session.user.email))) {
-    return {
-      ok: false,
-      error: `Solo el equipo puede publicar en ${space.name}.`,
-    };
+    return fail(`Solo el equipo puede publicar en ${space.name}.`);
   }
 
   const text = input.text.trim();
   const { images } = input;
   if (!text && images.length === 0) {
-    return { ok: false, error: "Escribe algo o agrega una imagen." };
+    return fail("Escribe algo o agrega una imagen.");
   }
   if (text.length > MAX_TEXT_LENGTH) {
-    return { ok: false, error: `Máximo ${MAX_TEXT_LENGTH} caracteres.` };
+    return fail(`Máximo ${MAX_TEXT_LENGTH} caracteres.`);
   }
   if (images.length > MAX_IMAGES || !images.every(isStreamCdnUrl)) {
-    return {
-      ok: false,
-      error: `Puedes adjuntar hasta ${MAX_IMAGES} imágenes.`,
-    };
+    return fail(`Puedes adjuntar hasta ${MAX_IMAGES} imágenes.`);
   }
 
   const { streamId } = session.user;
-  if (await isBanned(streamId)) {
-    return { ok: false, error: "Tu cuenta está suspendida." };
+  if (!(await takeRateLimit("post", streamId))) {
+    return fail("Publicaste varias veces seguidas. Espera unos minutos.");
   }
-  if (!takeRateLimit(`post:${streamId}`, POSTS_PER_WINDOW, WINDOW_MS)) {
-    return {
-      ok: false,
-      error: "Publicaste varias veces seguidas. Espera unos minutos.",
-    };
-  }
-
-  const mentionedUserIds = await existingMembers(
-    (input.mentionedUserIds ?? []).filter(
-      (id) => id !== streamId && id !== SYSTEM_USER_ID,
-    ),
+  const mentionedUserIds = await validMentions(
+    input.mentionedUserIds ?? [],
+    streamId,
   );
 
   try {
@@ -117,19 +109,105 @@ export async function createPost(input: {
     return { ok: true };
   } catch (error) {
     console.error("[stream] no se pudo publicar", error);
-    return { ok: false, error: "No pudimos publicar. Inténtalo de nuevo." };
+    return fail("No pudimos publicar. Inténtalo de nuevo.");
   }
 }
 
-// Deja solo ids de miembros que existen (sin duplicados, con tope).
-const existingMembers = async (ids: string[]) => {
-  const unique = [...new Set(ids)].slice(0, MAX_MENTIONS);
-  if (unique.length === 0) return [];
+// Los comentarios también pasan por el servidor: los miembros no tienen el
+// permiso `add-comment` en Stream (lo quita `stream:setup`), así que es la
+// única vía. Valida largo, menciones, bloqueo y frecuencia.
+export async function addComment(input: {
+  activityId: string;
+  text: string;
+  /** Comentario al que responde (las respuestas cuelgan del raíz). */
+  parentId?: string;
+  mentionedUserIds?: string[];
+}): Promise<ActionResult> {
+  if (
+    typeof input?.activityId !== "string" ||
+    typeof input.text !== "string" ||
+    (input.parentId !== undefined && typeof input.parentId !== "string") ||
+    (input.mentionedUserIds !== undefined &&
+      !isStreamIdList(input.mentionedUserIds))
+  ) {
+    return fail("Datos inválidos.");
+  }
+
+  const session = await memberSession();
+  if ("ok" in session) return session;
+
+  const text = input.text.trim();
+  if (!text) return fail("Escribe un comentario.");
+  if (text.length > MAX_COMMENT_LENGTH) {
+    return fail(`Máximo ${MAX_COMMENT_LENGTH} caracteres.`);
+  }
+
+  // La publicación debe existir (y no estar eliminada); una respuesta debe
+  // ser de un comentario de esa misma publicación.
+  const activity = await stream.feeds
+    .getActivity({ id: input.activityId })
+    .then(({ activity }) => activity)
+    .catch(() => undefined);
+  if (!activity || activity.type !== "post") {
+    return fail("Esta publicación ya no existe.");
+  }
+  // Las respuestas cuelgan del comentario raíz (un nivel de hilo). Quien
+  // recibe la notificación es el autor del raíz o, si no es respuesta, el
+  // autor de la publicación.
+  let parentId: string | undefined;
+  let notifyUserId = activity.user.id;
+  if (input.parentId) {
+    let parent = await findComment(input.parentId);
+    if (parent?.parent_id) parent = await findComment(parent.parent_id);
+    if (!parent || parent.object_id !== activity.id) {
+      return fail("Ese comentario ya no existe.");
+    }
+    parentId = parent.id;
+    notifyUserId = parent.user.id;
+  }
+
+  const { streamId } = session.user;
+  if (!(await takeRateLimit("comment", streamId))) {
+    return fail("Comentaste varias veces seguidas. Espera unos minutos.");
+  }
+  const mentionedUserIds = await validMentions(
+    input.mentionedUserIds ?? [],
+    streamId,
+  );
+
+  // Si el destinatario ya no existe, Stream crea el comentario y luego falla
+  // al notificar (no es atómico): se comprueba antes en lugar de reintentar,
+  // que duplicaría el comentario.
+  const notify = notifyUserId === streamId || (await userExists(notifyUserId));
+
+  try {
+    await stream.feeds.addComment({
+      object_id: activity.id,
+      object_type: "activity",
+      comment: text,
+      parent_id: parentId,
+      user_id: streamId,
+      mentioned_user_ids: mentionedUserIds,
+      // Avisa al autor del post (o del comentario, si es respuesta) y a los
+      // mencionados; Stream no notifica las acciones propias.
+      create_notification_activity: notify,
+    });
+    return { ok: true };
+  } catch (error) {
+    console.error("[stream] no se pudo comentar", error);
+    return fail("No pudimos enviar tu comentario. Inténtalo de nuevo.");
+  }
+}
+
+const findComment = (id: string) =>
+  stream.feeds
+    .getComment({ id })
+    .then(({ comment }) => comment)
+    .catch(() => undefined);
+
+const userExists = async (id: string) => {
   const { users } = await stream.queryUsers({
-    payload: {
-      filter_conditions: { id: { $in: unique } },
-      limit: unique.length,
-    },
+    payload: { filter_conditions: { id: { $eq: id } }, limit: 1 },
   });
-  return users.map((user) => user.id);
+  return users.length > 0;
 };

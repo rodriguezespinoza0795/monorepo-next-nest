@@ -1,18 +1,40 @@
 import "server-only";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 
-// Límite de frecuencia en memoria (ventana deslizante por clave). Protege el
-// tope mensual de actividades del plan gratuito de Stream. Vive en el proceso:
-// con varias instancias del servidor cada una lleva su propia cuenta.
-const hits = new Map<string, number[]>();
+// Límite de frecuencia compartido por todas las instancias del servidor
+// (Upstash Redis, ventana deslizante). Protege el tope mensual de
+// publicaciones del plan gratuito de Stream y evita el spam de comentarios.
+// Ver docs/reglas-de-negocio.md.
+const redis = Redis.fromEnv();
 
-export const takeRateLimit = (key: string, limit: number, windowMs: number) => {
-  const now = Date.now();
-  const recent = (hits.get(key) ?? []).filter((time) => now - time < windowMs);
-  if (recent.length >= limit) {
-    hits.set(key, recent);
-    return false;
+const limiters = {
+  post: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, "10 m"),
+    prefix: "rl:post",
+    timeout: 2000,
+  }),
+  comment: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(20, "10 m"),
+    prefix: "rl:comment",
+    timeout: 2000,
+  }),
+};
+
+export type RateLimitKind = keyof typeof limiters;
+
+/**
+ * `true` si la acción está permitida. Si Upstash no responde, deja pasar
+ * (mejor aceptar de más que bloquear a todos por una caída del servicio).
+ */
+export const takeRateLimit = async (kind: RateLimitKind, key: string) => {
+  try {
+    const { success } = await limiters[kind].limit(key);
+    return success;
+  } catch (error) {
+    console.error("[rate-limit] Upstash no respondió; se permite", error);
+    return true;
   }
-  recent.push(now);
-  hits.set(key, recent);
-  return true;
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
@@ -20,6 +20,7 @@ import { CommentComposer } from "@repo/ui/feed/comment-composer";
 import { CommentItem } from "@repo/ui/feed/comment-item";
 import { PostCardSkeleton } from "@repo/ui/feed/post-card-skeleton";
 import { profileHref } from "../../../../lib/routes";
+import { addComment } from "../../actions";
 import { ActivityPostCard } from "../../activity-post-card";
 import { RequireFeedsClient } from "../../require-feeds-client";
 import { useMentions } from "../../use-mentions";
@@ -52,7 +53,13 @@ const authorOf = (comment: CommentResponse): Author => ({
   href: profileHref(comment.user.id),
 });
 
-// Composer de comentario o respuesta conectado a Stream.
+// Vuelve a cargar la publicación y sus comentarios. Los comentarios se crean
+// en el servidor, así que el estado del SDK no se entera solo.
+const RefreshCommentsContext = createContext<() => Promise<void>>(
+  async () => {},
+);
+
+// Composer de comentario o respuesta (se envía por la server action).
 const ConnectedCommentComposer = ({
   activityId,
   parentId,
@@ -68,34 +75,33 @@ const ConnectedCommentComposer = ({
   const user = useClientConnectedUser();
   const [text, setText] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const mentions = useMentions();
+  const refreshComments = useContext(RefreshCommentsContext);
 
   if (!client || !user) return null;
 
   const submit = async () => {
     setSubmitting(true);
-    setError(false);
-    try {
-      await client.addComment({
-        object_id: activityId,
-        object_type: "activity",
-        comment: text.trim(),
-        ...(parentId && { parent_id: parentId }),
-        mentioned_user_ids: mentions.mentionedIds(text),
-        // Avisa al autor del post (o del comentario, si es respuesta) y a
-        // los mencionados.
-        create_notification_activity: true,
-      });
+    setError(null);
+    const result = await addComment({
+      activityId,
+      text,
+      parentId,
+      mentionedUserIds: mentions.mentionedIds(text),
+    }).catch(() => ({
+      ok: false as const,
+      error: "No pudimos enviar tu comentario. Inténtalo de nuevo.",
+    }));
+    if (result.ok) {
+      await refreshComments();
       setText("");
       mentions.reset();
       onDone?.();
-    } catch (commentError) {
-      console.error("[stream] no se pudo comentar", commentError);
-      setError(true);
-    } finally {
-      setSubmitting(false);
+    } else {
+      setError(result.error);
     }
+    setSubmitting(false);
   };
 
   return (
@@ -115,11 +121,7 @@ const ConnectedCommentComposer = ({
         onMentionQuery={mentions.onMentionQuery}
         onMention={mentions.onMention}
       />
-      {error && (
-        <Alert severity="error">
-          No pudimos enviar tu comentario. Inténtalo de nuevo.
-        </Alert>
-      )}
+      {error && <Alert severity="error">{error}</Alert>}
     </Stack>
   );
 };
@@ -250,12 +252,24 @@ const ConnectedPostDetail = ({ activityId }: { activityId: string }) => {
       activity: state.activity,
     })) ?? {};
 
+  // `version` sube para recargar (tras comentar). La instancia nueva se
+  // muestra cuando ya trae los datos, así la pantalla no parpadea.
+  const [version, setVersion] = useState(0);
+  const pendingRefreshes = useRef<(() => void)[]>([]);
+  const refreshComments = () =>
+    new Promise<void>((resolve) => {
+      pendingRefreshes.current.push(resolve);
+      setVersion((current) => current + 1);
+    });
+
   useEffect(() => {
     if (!client) return;
     const instance = client.activityWithStateUpdates(activityId);
     let cancelled = false;
-    setActivityWithState(instance);
-    setStatus("loading");
+    const settle = () => {
+      pendingRefreshes.current.splice(0).forEach((resolve) => resolve());
+    };
+    if (version === 0) setStatus("loading");
     instance
       .get({
         comments: {
@@ -266,17 +280,21 @@ const ConnectedPostDetail = ({ activityId }: { activityId: string }) => {
         },
       })
       .then(() => {
-        if (!cancelled) setStatus("ready");
+        if (cancelled) return;
+        setActivityWithState(instance);
+        setStatus("ready");
+        settle();
       })
       .catch((error: unknown) => {
         console.error("[stream] no se pudo cargar la publicación", error);
         if (!cancelled) setStatus("error");
+        settle();
       });
     return () => {
       cancelled = true;
       instance.dispose();
     };
-  }, [client, activityId]);
+  }, [client, activityId, version]);
 
   return (
     <Stack spacing={2}>
@@ -289,10 +307,10 @@ const ConnectedPostDetail = ({ activityId }: { activityId: string }) => {
         </Alert>
       )}
       {status === "ready" && activity && activityWithState && (
-        <>
+        <RefreshCommentsContext value={refreshComments}>
           <ActivityPostCard activity={activity} showSpace />
           <Comments activity={activityWithState} />
-        </>
+        </RefreshCommentsContext>
       )}
     </Stack>
   );
