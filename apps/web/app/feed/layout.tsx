@@ -2,9 +2,11 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@repo/ui/site-header";
 import { auth } from "../../lib/auth";
+import { isBanned } from "../../lib/membership";
 import { FeedShell } from "./feed-shell";
 import { FeedsProvider } from "./feeds-provider";
 import { NotificationsMenu } from "./notifications-menu";
+import { SuspendedNotice } from "./suspended-notice";
 
 export default async function FeedLayout({ children }: LayoutProps<"/feed">) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -12,6 +14,15 @@ export default async function FeedLayout({ children }: LayoutProps<"/feed">) {
 
   const { streamId, name, image } = session.user;
   const user = { id: streamId, name, image };
+
+  if (await isBanned(streamId)) {
+    return (
+      <>
+        <SiteHeader brand="getStream" action={{ label: "Inicio", href: "/" }} />
+        <SuspendedNotice />
+      </>
+    );
+  }
 
   return (
     <FeedsProvider user={user}>

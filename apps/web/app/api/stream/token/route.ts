@@ -12,7 +12,13 @@ export async function GET() {
   }
 
   const { streamId, name, image } = session.user;
-  await stream.upsertUsers([{ id: streamId, name, image: image ?? undefined }]);
+  const { users } = await stream.upsertUsers([
+    { id: streamId, name, image: image ?? undefined },
+  ]);
+  // Bloqueado desde moderación: sin token no se conecta a Stream.
+  if (users[streamId]?.banned) {
+    return Response.json({ error: "Cuenta suspendida" }, { status: 403 });
+  }
 
   const token = stream.generateUserToken({
     user_id: streamId,

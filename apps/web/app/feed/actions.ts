@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { isAdmin } from "../../lib/admins";
 import { profileFid, spaceFid, SYSTEM_USER_ID } from "../../lib/feeds";
 import { auth } from "../../lib/auth";
+import { isBanned } from "../../lib/membership";
 import { takeRateLimit } from "../../lib/rate-limit";
 import { canPostIn, findSpace } from "../../lib/spaces";
 import { stream } from "../../lib/stream";
@@ -82,6 +83,9 @@ export async function createPost(input: {
   }
 
   const { streamId } = session.user;
+  if (await isBanned(streamId)) {
+    return { ok: false, error: "Tu cuenta está suspendida." };
+  }
   if (!takeRateLimit(`post:${streamId}`, POSTS_PER_WINDOW, WINDOW_MS)) {
     return {
       ok: false,
