@@ -18,6 +18,7 @@
     "@mui/icons-material": "^9.4.0",
     "@mui/material": "^9.4.0",
     "@mui/material-nextjs": "^9.4.0",
+    "@repo/community": "workspace:*",
     "@repo/ui": "workspace:*",
     "@stream-io/feeds-react-sdk": "^1.0.23",
     "@stream-io/node-sdk": "^0.8.11",

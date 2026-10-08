@@ -34,7 +34,7 @@ export default function Home() {
     <>
       <SiteHeader
         brand="getStream Admin"
-        action={{ label: "Acceder", href: "#" }}
+        action={{ label: "Acceder", href: "/login" }}
       />
 
       <Box

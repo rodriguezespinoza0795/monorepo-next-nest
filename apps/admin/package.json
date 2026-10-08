@@ -14,12 +14,17 @@
     "@emotion/cache": "^11.14.0",
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.4.0",
     "@mui/material": "^9.4.0",
     "@mui/material-nextjs": "^9.4.0",
+    "@repo/community": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@stream-io/node-sdk": "^0.8.11",
+    "better-auth": "^1.7.7",
     "next": "16.3.4",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",
