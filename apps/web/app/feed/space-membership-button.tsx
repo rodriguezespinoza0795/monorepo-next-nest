@@ -8,10 +8,11 @@ import {
   useStateStore,
 } from "@stream-io/feeds-react-sdk";
 import { timelineFid } from "../../lib/feeds";
+import { RequireFeedsClient } from "./require-feeds-client";
 
 // Unirse / salir de un espacio = que el timeline del miembro siga o deje de
 // seguir el feed del espacio. Lo permiten los permisos de Stream (`follow`).
-export const SpaceMembershipButton = ({ spaceId }: { spaceId: string }) => {
+const ConnectedSpaceMembershipButton = ({ spaceId }: { spaceId: string }) => {
   const client = useFeedsClient();
   const user = useClientConnectedUser();
   // Misma instancia que usa la lista del espacio (el cliente la reutiliza).
@@ -56,3 +57,9 @@ export const SpaceMembershipButton = ({ spaceId }: { spaceId: string }) => {
     </Button>
   );
 };
+
+export const SpaceMembershipButton = ({ spaceId }: { spaceId: string }) => (
+  <RequireFeedsClient>
+    <ConnectedSpaceMembershipButton spaceId={spaceId} />
+  </RequireFeedsClient>
+);

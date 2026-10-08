@@ -148,7 +148,17 @@ export const ActivityFeed = ({
       {header}
 
       {postableSpaces.length > 0 && (
-        <ConnectedPostComposer spaces={postableSpaces} />
+        <ConnectedPostComposer
+          spaces={postableSpaces}
+          // El post llega por tiempo real, pero si se publica justo mientras
+          // el feed se suscribe, el evento se puede perder: se recarga la
+          // primera página para que el autor siempre vea su post.
+          onPosted={() =>
+            void feed
+              ?.getOrCreate({ watch: true, limit: PAGE_SIZE })
+              .catch(() => {})
+          }
+        />
       )}
 
       {status === "error" && (

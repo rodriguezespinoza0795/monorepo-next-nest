@@ -26,12 +26,15 @@ export const useToggleLike = () => {
         await client.deleteActivityReaction({
           activity_id: activity.id,
           type: LIKE,
+          delete_notification_activity: true,
         });
       } else {
         await client.addActivityReaction({
           activity_id: activity.id,
           type: LIKE,
           enforce_unique: true,
+          // Avisa al autor (Stream no notifica los likes propios).
+          create_notification_activity: true,
         });
       }
     } catch (error) {

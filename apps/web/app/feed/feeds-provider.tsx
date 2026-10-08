@@ -1,8 +1,6 @@
 "use client";
 
 import type { ReactNode } from "react";
-import Box from "@mui/material/Box";
-import CircularProgress from "@mui/material/CircularProgress";
 import { StreamFeeds, useCreateFeedsClient } from "@stream-io/feeds-react-sdk";
 
 interface FeedsProviderProps {
@@ -26,13 +24,9 @@ export const FeedsProvider = ({ user, children }: FeedsProviderProps) => {
     userData: { id: user.id, name: user.name, image: user.image ?? undefined },
   });
 
-  if (!client) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-        <CircularProgress aria-label="Conectando" />
-      </Box>
-    );
-  }
+  // Mientras conecta se muestra la página sin cliente: cada pantalla enseña
+  // su esqueleto de carga (los hooks del SDK toleran que no haya cliente).
+  if (!client) return children;
 
   return <StreamFeeds client={client}>{children}</StreamFeeds>;
 };

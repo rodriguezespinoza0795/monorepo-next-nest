@@ -44,6 +44,10 @@ export const ActivityPostCard = ({
       }}
       createdAt={new Date(activity.created_at)}
       text={activity.text}
+      mentions={activity.mentioned_users.map((user) => ({
+        name: user.name ?? user.id,
+        href: profileHref(user.id),
+      }))}
       space={showSpace ? spaceName(activity) : undefined}
       images={imagesOf(activity)}
       reactionCount={activity.reaction_groups.like?.count ?? 0}

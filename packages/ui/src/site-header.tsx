@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -26,9 +26,16 @@ interface SiteHeaderProps {
   brand: string;
   links?: NavLink[];
   action: NavLink;
+  /** Controles extra junto al botón de acción (por ejemplo, notificaciones). */
+  extra?: ReactNode;
 }
 
-export const SiteHeader = ({ brand, links = [], action }: SiteHeaderProps) => {
+export const SiteHeader = ({
+  brand,
+  links = [],
+  action,
+  extra,
+}: SiteHeaderProps) => {
   const scrolled = useScrollTrigger({ disableHysteresis: true, threshold: 24 });
   const [menuOpen, setMenuOpen] = useState(false);
   const closeMenu = () => setMenuOpen(false);
@@ -93,6 +100,7 @@ export const SiteHeader = ({ brand, links = [], action }: SiteHeaderProps) => {
                 {link.label}
               </Link>
             ))}
+            {extra}
             <Button variant="outlined" size="small" href={action.href}>
               {action.label}
             </Button>

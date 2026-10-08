@@ -11,6 +11,7 @@ import Typography from "@mui/material/Typography";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import { MentionText, type Mention } from "./mention-text";
 import { RelativeTime } from "./relative-time";
 
 export interface PostImage {
@@ -23,6 +24,8 @@ export interface PostCardProps {
   author: { name: string; image?: string; href?: string };
   createdAt: Date;
   text?: string;
+  /** Personas mencionadas en el texto (se resaltan como `@Nombre`). */
+  mentions?: Mention[];
   space?: string;
   images?: PostImage[];
   reactionCount: number;
@@ -49,6 +52,7 @@ export const PostCard = ({
   author,
   createdAt,
   text,
+  mentions,
   space,
   images = [],
   reactionCount,
@@ -116,7 +120,11 @@ export const PostCard = ({
           color: "text.primary",
         }}
       >
-        {text}
+        <MentionText
+          text={text}
+          mentions={mentions}
+          linkComponent={linkComponent}
+        />
       </Typography>
     )}
 

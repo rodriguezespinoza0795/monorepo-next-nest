@@ -17,8 +17,11 @@ export const getOrCreateOwnedFeed = async (
     id: string;
     /** Dueño esperado del feed. */
     ownerId: string;
-    /** Único autor cuyas publicaciones pueden estar en este feed. */
-    authorId: string;
+    /**
+     * Único autor cuyas publicaciones pueden estar en este feed. Sin él (por
+     * ejemplo, en notificaciones, que crean otros) solo se transfiere.
+     */
+    authorId?: string;
   },
 ) => {
   const response = await client.feeds.getOrCreateFeed({
@@ -37,6 +40,7 @@ export const getOrCreateOwnedFeed = async (
     feed_id: id,
     created_by_id: ownerId,
   });
+  if (authorId === undefined) return false;
 
   const { activities } = await client.feeds.getOrCreateFeed({
     feed_group_id: group,

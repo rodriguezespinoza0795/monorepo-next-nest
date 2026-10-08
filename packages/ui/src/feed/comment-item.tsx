@@ -7,6 +7,7 @@ import Button from "@mui/material/Button";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { MentionText, type Mention } from "./mention-text";
 import { RelativeTime } from "./relative-time";
 
 interface CommentItemProps {
@@ -14,6 +15,8 @@ interface CommentItemProps {
   author: { name: string; image?: string; href?: string };
   createdAt: Date;
   text?: string;
+  /** Personas mencionadas en el texto (se resaltan como `@Nombre`). */
+  mentions?: Mention[];
   deleted?: boolean;
   onReply?: () => void;
   /** Respuestas y composer de respuesta, con sangría bajo el comentario. */
@@ -26,6 +29,7 @@ export const CommentItem = ({
   author,
   createdAt,
   text,
+  mentions,
   deleted = false,
   onReply,
   children,
@@ -83,7 +87,15 @@ export const CommentItem = ({
             ...(deleted && { color: "text.secondary", fontStyle: "italic" }),
           }}
         >
-          {deleted ? "Comentario eliminado" : text}
+          {deleted ? (
+            "Comentario eliminado"
+          ) : (
+            <MentionText
+              text={text ?? ""}
+              mentions={mentions}
+              linkComponent={linkComponent}
+            />
+          )}
         </Typography>
       </Box>
       {onReply && !deleted && (
