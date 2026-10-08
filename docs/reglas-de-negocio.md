@@ -38,37 +38,39 @@ Un administrador también es miembro, y cualquier miembro es autor de lo que cre
 
 ## 3. Qué puede hacer cada rol
 
-| Acción                                                         | Visitante | Miembro              | Autor (sobre lo suyo)  | Administrador                                   | Dónde se aplica                                                             |
-| -------------------------------------------------------------- | --------- | -------------------- | ---------------------- | ----------------------------------------------- | --------------------------------------------------------------------------- |
-| Iniciar sesión (solo Google)                                   | ✅        | —                    | —                      | —                                               | Better Auth                                                                 |
-| Leer posts y comentarios de los espacios                       | ❌        | ✅                   | —                      | ✅                                              | Página (sesión) + Stream (`visible`)                                        |
-| Ver el perfil de un miembro (sus posts)                        | ❌        | ✅                   | —                      | ✅                                              | Página (sesión) + Stream (`visible`)                                        |
-| Publicar en **General**                                        | ❌        | ✅                   | —                      | ✅                                              | Server action `createPost`                                                  |
-| Publicar en **Anuncios**                                       | ❌        | ❌                   | —                      | ✅                                              | UI + `createPost` (`adminOnly`)                                             |
-| Publicar directo con la API de Stream (espacios y perfiles)    | ❌        | ❌ (403)             | —                      | ❌ (403)                                        | Stream: feeds de `system` con visibilidad `visible`                         |
-| Adjuntar imágenes a un post                                    | ❌        | ✅ (ver límites)     | —                      | ✅                                              | Composer + `createPost`                                                     |
-| Dar / quitar "me gusta" a un post                              | ❌        | ✅ (uno por persona) | ✅ (también a lo suyo) | ✅                                              | SDK de Stream en el navegador (`enforce_unique`)                            |
-| Comentar un post (también en Anuncios)                         | ❌        | ✅                   | —                      | ✅                                              | Server action `addComment` (los miembros no tienen `add-comment` en Stream) |
-| Responder un comentario (1 nivel de hilo)                      | ❌        | ✅                   | —                      | ✅                                              | Server action `addComment`                                                  |
-| Mencionar a un miembro con `@Nombre` (post o comentario)       | ❌        | ✅                   | —                      | ✅                                              | Autocompletado + validación en `createPost` / `addComment`                  |
-| Ver y marcar sus notificaciones como leídas                    | ❌        | ✅                   | —                      | ✅                                              | SDK de Stream (feed `notification:<streamId>`)                              |
-| Editar su post                                                 | —         | —                    | ⏳ Sin UI              | ⏳                                              | Stream lo permite por API (ver brechas)                                     |
-| Borrar su post                                                 | —         | —                    | ⏳ Sin UI              | ⏳                                              | Stream lo permite por API                                                   |
-| Editar / borrar su comentario                                  | —         | —                    | ⏳ Sin UI              | ⏳                                              | Stream lo permite por API                                                   |
-| Borrar contenido **ajeno** (posts y comentarios)               | ❌        | ❌ (403 verificado)  | —                      | ✅ Desde el panel                               | Server actions de `apps/admin`                                              |
-| Restaurar o eliminar definitivamente una publicación eliminada | ❌        | ❌                   | —                      | ✅ Desde "Eliminadas"                           | Server actions de `apps/admin`                                              |
-| Editar contenido ajeno                                         | ❌        | ❌                   | —                      | ❌                                              | —                                                                           |
-| Unirse / salir de un espacio                                   | ❌        | ✅                   | —                      | ✅                                              | SDK de Stream (el timeline sigue o deja de seguir el espacio)               |
-| Crear o editar espacios                                        | ❌        | ❌                   | —                      | ✅ Solo con `stream:setup` y `lib/spaces.ts`    | Código + script                                                             |
-| Bloquear / desbloquear miembros                                | ❌        | ❌                   | —                      | ✅ Desde el panel (no a sí mismo ni a `system`) | Server actions de `apps/admin` + baneo de Stream                            |
-| Cambiar su `streamId`                                          | —         | ❌ (400)             | —                      | ❌                                              | Hook de Better Auth                                                         |
+| Acción                                                         | Visitante | Miembro              | Autor (sobre lo suyo)                                              | Administrador                                   | Dónde se aplica                                                             |
+| -------------------------------------------------------------- | --------- | -------------------- | ------------------------------------------------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------- |
+| Iniciar sesión (solo Google)                                   | ✅        | —                    | —                                                                  | —                                               | Better Auth                                                                 |
+| Leer posts y comentarios de los espacios                       | ❌        | ✅                   | —                                                                  | ✅                                              | Página (sesión) + Stream (`visible`)                                        |
+| Ver el perfil de un miembro (sus posts)                        | ❌        | ✅                   | —                                                                  | ✅                                              | Página (sesión) + Stream (`visible`)                                        |
+| Publicar en **General**                                        | ❌        | ✅                   | —                                                                  | ✅                                              | Server action `createPost`                                                  |
+| Publicar en **Anuncios**                                       | ❌        | ❌                   | —                                                                  | ✅                                              | UI + `createPost` (`adminOnly`)                                             |
+| Publicar directo con la API de Stream (espacios y perfiles)    | ❌        | ❌ (403)             | —                                                                  | ❌ (403)                                        | Stream: feeds de `system` con visibilidad `visible`                         |
+| Adjuntar imágenes a un post                                    | ❌        | ✅ (ver límites)     | —                                                                  | ✅                                              | Composer + `createPost`                                                     |
+| Dar / quitar "me gusta" a un post                              | ❌        | ✅ (uno por persona) | ✅ (también a lo suyo)                                             | ✅                                              | SDK de Stream en el navegador (`enforce_unique`)                            |
+| Comentar un post (también en Anuncios)                         | ❌        | ✅                   | —                                                                  | ✅                                              | Server action `addComment` (los miembros no tienen `add-comment` en Stream) |
+| Responder un comentario (1 nivel de hilo)                      | ❌        | ✅                   | —                                                                  | ✅                                              | Server action `addComment`                                                  |
+| Mencionar a un miembro con `@Nombre` (post o comentario)       | ❌        | ✅                   | —                                                                  | ✅                                              | Autocompletado + validación en `createPost` / `addComment`                  |
+| Ver y marcar sus notificaciones como leídas                    | ❌        | ✅                   | —                                                                  | ✅                                              | SDK de Stream (feed `notification:<streamId>`)                              |
+| Editar su post (texto y menciones)                             | —         | —                    | ✅ Menú "⋯" → Editar; queda "· editado"                            | —                                               | Server action `updatePost`                                                  |
+| Borrar su post                                                 | —         | —                    | ✅ Menú "⋯" → Eliminar (borrado suave: el admin puede restaurarlo) | —                                               | Server action `deleteOwnPost`                                               |
+| Editar / borrar su comentario                                  | —         | —                    | ✅ Menú "⋯" del comentario                                         | —                                               | Server actions `updateComment` y `deleteOwnComment`                         |
+| Borrar contenido **ajeno** (posts y comentarios)               | ❌        | ❌ (403 verificado)  | —                                                                  | ✅ Desde el panel                               | Server actions de `apps/admin`                                              |
+| Restaurar o eliminar definitivamente una publicación eliminada | ❌        | ❌                   | —                                                                  | ✅ Desde "Eliminadas"                           | Server actions de `apps/admin`                                              |
+| Editar contenido ajeno                                         | ❌        | ❌                   | —                                                                  | ❌                                              | —                                                                           |
+| Unirse / salir de un espacio                                   | ❌        | ✅                   | —                                                                  | ✅                                              | SDK de Stream (el timeline sigue o deja de seguir el espacio)               |
+| Crear o editar espacios                                        | ❌        | ❌                   | —                                                                  | ✅ Solo con `stream:setup` y `lib/spaces.ts`    | Código + script                                                             |
+| Bloquear / desbloquear miembros                                | ❌        | ❌                   | —                                                                  | ✅ Desde el panel (no a sí mismo ni a `system`) | Server actions de `apps/admin` + baneo de Stream                            |
+| Cambiar su `streamId`                                          | —         | ❌ (400)             | —                                                                  | ❌                                              | Hook de Better Auth                                                         |
 
 ## 4. El autor (owner) de un post
 
 - El autor es quien lo publicó: `activity.user.id === streamId` del miembro. No se transfiere.
 - Los posts de usuarios se publican **siempre** desde el servidor (`createPost`) con su `streamId` como autor; el cliente no puede elegir otro autor.
 - Un post vive en dos feeds: `space:<espacio>` (lo que leen los demás) y `profile:<streamId>` (su perfil). Ambos son de `system`, así que solo el servidor publica en ellos.
-- Hoy el autor **no tiene en la UI** acciones extra sobre su post (editar/borrar). Cuando se agreguen (⏳), deben pasar por el servidor con las mismas validaciones de `createPost`.
+- El autor puede **editar** el texto y las menciones de su post (no las imágenes ni el espacio) y **eliminarlo**, desde el menú "⋯". Igual con sus comentarios. Todo pasa por el servidor, que comprueba que sea el autor (verificado: repetir la acción con un post ajeno responde "Solo puedes editar tus publicaciones.").
+- Editar avisa solo a quien se menciona por primera vez. Eliminar es suave: lo eliminado aparece en el panel de moderación y un administrador puede restaurarlo.
+- Los miembros no tienen en Stream `update-*-owner` ni `delete-*-owner` (los quita `stream:setup`): editar o borrar directo con la API da 403 (verificado).
 - Los posts del **Sistema** (bienvenida) solo los cambia el script `stream:setup`.
 
 ## 5. Espacios
@@ -146,7 +148,7 @@ Un administrador también es miembro, y cualquier miembro es autor de lo que cre
 Reglas que hoy dependen solo de la interfaz o que Stream no hace cumplir como queremos. Cada una debe cerrarse en el PR indicado o antes de producción.
 
 1. ~~**Feed de perfil abierto para su dueño.**~~ **Cerrada en PR 4:** el perfil es `profile:<streamId>`, de `system`. Queda el feed antiguo `user:<streamId>` (del miembro, no se muestra en ningún lado) y el propio `timeline`: el miembro puede publicar directo en ellos, pero solo lo vería él mismo en su Inicio.
-2. **Editar el propio post por API.** Stream deja al autor editar su post con su token, saltándose las validaciones de `createPost` (largo, imágenes del CDN; verificado: acepta 6000 caracteres). Cerrar cuando se agregue edición (⏳), por ejemplo validando en servidor o revisando permisos de Stream.
+2. ~~**Editar el propio post por API.**~~ **Cerrada en v2 PR 2:** editar y borrar lo propio solo por el servidor (`updatePost`, `deleteOwnPost`, `updateComment`, `deleteOwnComment`), con las mismas validaciones; directo con la API da 403.
 3. ~~**Comentarios y likes sin límite propio.**~~ **Comentarios cerrada en v2 PR 1** (20 cada 10 min, por el servidor). Los likes siguen sin límite propio: van directo del navegador, están limitados a uno por persona y post, y no cuentan para el tope de 5k (confirmado en el dashboard el 2026-10-08).
 4. ~~**Largo de comentarios solo en el cliente.**~~ **Cerrada en v2 PR 1:** los comentarios solo entran por `addComment`, que valida el largo; comentar directo con la API da 403 (verificado).
 5. ~~**Límite de frecuencia por proceso.**~~ **Cerrada en v2 PR 1:** Upstash Redis, compartido por todas las instancias. Si Upstash no responde, el límite deja pasar (mejor aceptar de más que bloquear a todos).
@@ -157,20 +159,20 @@ Reglas que hoy dependen solo de la interfaz o que Stream no hace cumplir como qu
 
 ## 11. Dónde vive cada regla en el código
 
-| Regla                                         | Archivo                                                                  |
-| --------------------------------------------- | ------------------------------------------------------------------------ |
-| Roles de administrador                        | `packages/community/src/admins.ts` (`ADMIN_EMAILS`, compartido)          |
-| Espacios y quién publica                      | `apps/web/lib/spaces.ts` (`adminOnly`, `canPostIn`)                      |
-| Publicar y comentar (validaciones y permisos) | `apps/web/app/feed/actions.ts` (`createPost`, `addComment`)              |
-| Límite de frecuencia                          | `apps/web/lib/rate-limit.ts`                                             |
-| Sesión e identidad                            | `apps/web/lib/auth.ts`                                                   |
-| Onboarding (seguir espacios)                  | `apps/web/lib/onboarding.ts`                                             |
-| Permisos en Stream (visibilidad)              | `apps/web/scripts/stream-setup.ts`                                       |
-| Ids de feeds y usuario `system`               | `apps/web/lib/feeds.ts`                                                  |
-| Dueño de perfiles y timelines                 | `apps/web/lib/owned-feed.ts` (`getOrCreateOwnedFeed`)                    |
-| Unirse / salir de un espacio                  | `apps/web/app/feed/space-membership-button.tsx`                          |
-| Notificaciones (campana y textos)             | `apps/web/app/feed/notifications-menu.tsx`                               |
-| Menciones (autocompletado)                    | `apps/web/app/feed/use-mentions.ts`                                      |
-| Panel de moderación y sus acciones            | `apps/admin/app/moderacion/` (`actions.ts`), `apps/admin/lib/session.ts` |
-| Miembro bloqueado en `web`                    | `apps/web/lib/membership.ts`, `app/feed/layout.tsx`, `/api/stream/token` |
-| Acceso a páginas                              | `apps/web/app/feed/layout.tsx`, `apps/web/app/login/page.tsx`            |
+| Regla                                         | Archivo                                                                          |
+| --------------------------------------------- | -------------------------------------------------------------------------------- |
+| Roles de administrador                        | `packages/community/src/admins.ts` (`ADMIN_EMAILS`, compartido)                  |
+| Espacios y quién publica                      | `apps/web/lib/spaces.ts` (`adminOnly`, `canPostIn`)                              |
+| Publicar, comentar, editar y borrar lo propio | `apps/web/app/feed/actions.ts`; permisos de miembro en `scripts/stream-setup.ts` |
+| Límite de frecuencia                          | `apps/web/lib/rate-limit.ts`                                                     |
+| Sesión e identidad                            | `apps/web/lib/auth.ts`                                                           |
+| Onboarding (seguir espacios)                  | `apps/web/lib/onboarding.ts`                                                     |
+| Permisos en Stream (visibilidad)              | `apps/web/scripts/stream-setup.ts`                                               |
+| Ids de feeds y usuario `system`               | `apps/web/lib/feeds.ts`                                                          |
+| Dueño de perfiles y timelines                 | `apps/web/lib/owned-feed.ts` (`getOrCreateOwnedFeed`)                            |
+| Unirse / salir de un espacio                  | `apps/web/app/feed/space-membership-button.tsx`                                  |
+| Notificaciones (campana y textos)             | `apps/web/app/feed/notifications-menu.tsx`                                       |
+| Menciones (autocompletado)                    | `apps/web/app/feed/use-mentions.ts`                                              |
+| Panel de moderación y sus acciones            | `apps/admin/app/moderacion/` (`actions.ts`), `apps/admin/lib/session.ts`         |
+| Miembro bloqueado en `web`                    | `apps/web/lib/membership.ts`, `app/feed/layout.tsx`, `/api/stream/token`         |
+| Acceso a páginas                              | `apps/web/app/feed/layout.tsx`, `apps/web/app/login/page.tsx`                    |

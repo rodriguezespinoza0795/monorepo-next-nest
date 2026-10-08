@@ -23,6 +23,12 @@ interface CommentItemProps {
   children?: ReactNode;
   /** Componente de enlace de la app (por ejemplo `next/link`). */
   linkComponent?: ElementType;
+  /** Muestra "· editado" junto a la fecha. */
+  edited?: boolean;
+  /** Menú de acciones, por ejemplo `ItemMenu`. */
+  menu?: ReactNode;
+  /** Si está, reemplaza la burbuja del comentario (edición en el lugar). */
+  editor?: ReactNode;
 }
 
 export const CommentItem = ({
@@ -34,13 +40,18 @@ export const CommentItem = ({
   onReply,
   children,
   linkComponent = "a",
+  edited = false,
+  menu,
+  editor,
 }: CommentItemProps) => (
   <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
     <Avatar src={author.image} alt={author.name} sx={{ width: 32, height: 32 }}>
       {author.name.charAt(0)}
     </Avatar>
     <Box sx={{ flex: 1, minWidth: 0 }}>
+      {editor}
       <Box
+        hidden={Boolean(editor)}
         sx={{
           px: 1.75,
           py: 1.25,
@@ -75,7 +86,11 @@ export const CommentItem = ({
             sx={{ flexShrink: 0 }}
           >
             <RelativeTime date={createdAt} />
+            {edited && " · editado"}
           </Typography>
+          {menu && !deleted && (
+            <Box sx={{ ml: "auto !important", my: -0.75, mr: -1 }}>{menu}</Box>
+          )}
         </Stack>
         <Typography
           variant="body2"
@@ -98,7 +113,7 @@ export const CommentItem = ({
           )}
         </Typography>
       </Box>
-      {onReply && !deleted && (
+      {onReply && !deleted && !editor && (
         <Button
           size="small"
           onClick={onReply}
