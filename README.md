@@ -1,159 +1,66 @@
-# Turborepo starter
+# getStream — Comunidad
 
-This Turborepo starter is maintained by the Turborepo core team.
+Comunidad estilo Circle construida con **Next.js**, **Material UI** y **Stream Activity Feeds v3**, en un monorepo de Turborepo.
 
-## Using this example
+| Paquete              | Qué es                                                                                          | Puerto |
+| -------------------- | ----------------------------------------------------------------------------------------------- | ------ |
+| `apps/web`           | La comunidad: login con Google, espacios, publicaciones, comentarios, perfiles y notificaciones | 3000   |
+| `apps/admin`         | Panel de moderación (solo administradores)                                                      | 3001   |
+| `packages/ui`        | Tema y componentes compartidos (MUI)                                                            | —      |
+| `packages/community` | Código de servidor compartido: cliente de Stream y regla de administradores                     | —      |
 
-Run the following command:
+Las reglas de negocio (roles, permisos, límites y brechas conocidas) están en [`docs/reglas-de-negocio.md`](docs/reglas-de-negocio.md), y el plan en curso en [`docs/plan-v2.md`](docs/plan-v2.md).
 
-```sh
-npx create-turbo@latest
-```
+## Requisitos
 
-## What's inside?
+- Node.js 24 (`nvm use`) y pnpm 11
+- Una app de **Stream** (Activity Feeds), un cliente **OAuth de Google** y una base de **Upstash Redis** (todos tienen plan gratis)
 
-This Turborepo includes the following packages/apps:
-
-### Apps and Packages
-
-- `admin`: a [Next.js](https://nextjs.org/) app (admin panel)
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `admin` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+## Puesta en marcha
 
 ```sh
-cd my-turborepo
-turbo build
+pnpm install
+
+# Variables de entorno: copia los ejemplos y complétalos
+cp apps/web/.env.example apps/web/.env.local
+cp apps/admin/.env.example apps/admin/.env.local
+
+# Prepara la app de Stream (grupos de feeds, espacios y permisos). Idempotente.
+pnpm --filter web stream:setup
+
+pnpm dev   # web en http://localhost:3000 · admin en http://localhost:3001
 ```
 
-Without global `turbo`, use your package manager:
+En Google Cloud Console autoriza las URIs de redirección `http://localhost:3000/api/auth/callback/google` y `http://localhost:3001/api/auth/callback/google`.
+
+## Calidad
 
 ```sh
-cd my-turborepo
-npx turbo build
-pnpm exec turbo build
-pnpm exec turbo build
+pnpm check-types
+pnpm lint
+pnpm build
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+Se ejecutan en GitHub Actions en cada PR y en cada push a `main` (`.github/workflows/ci.yml`).
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+### Pruebas de punta a punta
+
+Usan una **app de Stream solo para pruebas** (crean y borran miembros, publicaciones y comentarios, y las publicaciones cuentan para el tope mensual de actividades).
 
 ```sh
-turbo build --filter=admin
+cp apps/web/.env.test.example apps/web/.env.test.local   # credenciales de la app de pruebas
+pnpm --filter web exec playwright install chromium        # una vez
+pnpm --filter web test:e2e
 ```
 
-Without global `turbo`:
+Playwright compila y levanta su propio servidor de `web` en el puerto 3100 (carpeta `.next-e2e`), así que no choca con `pnpm dev`. Las pruebas viven en `apps/web/e2e/`.
+
+En GitHub se corren bajo demanda desde **Actions → E2E → Run workflow** (`.github/workflows/e2e.yml`), con los secrets `STREAM_TEST_API_KEY`, `STREAM_TEST_API_SECRET` y, opcionalmente, `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
+
+### Validación en móvil
+
+Todo cambio visual se valida también en móvil (ver `CLAUDE.md`):
 
 ```sh
-npx turbo build --filter=admin
-pnpm exec turbo build --filter=admin
-pnpm exec turbo build --filter=admin
+~/.venvs/playwright/bin/python .claude/scripts/mobile_check.py <carpeta-de-capturas> [ruta]
 ```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
