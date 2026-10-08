@@ -58,6 +58,26 @@ await client.feeds.getOrCreateFeedGroup({
 });
 console.log("✓ feed group `profile`");
 
+// Los comentarios entran solo por la server action `addComment` (valida
+// largo, menciones, bloqueo y frecuencia). Se quita `add-comment` a los roles
+// de miembro en la visibilidad `visible` (espacios, perfiles, timelines) para
+// que nadie comente directo con su token. Admins y moderadores de Stream lo
+// conservan; el SDK de servidor no pasa por estos permisos.
+const MEMBER_ROLES = ["user", "feed_follower", "feed_member"];
+const { feed_visibility } = await client.feeds.getFeedVisibility({
+  name: SPACE_VISIBILITY,
+});
+const grants = Object.fromEntries(
+  Object.entries(feed_visibility.grants).map(([role, permissions]) => [
+    role,
+    MEMBER_ROLES.includes(role)
+      ? permissions.filter((permission) => permission !== "add-comment")
+      : permissions,
+  ]),
+);
+await client.feeds.updateFeedVisibility({ name: SPACE_VISIBILITY, grants });
+console.log("✓ comentarios solo por el servidor");
+
 // Perfiles de los miembros que ya existen (los nuevos los crea el onboarding),
 // para que nadie se adelante a crearlos y quede como dueño.
 const { users: members } = await client.queryUsers({
