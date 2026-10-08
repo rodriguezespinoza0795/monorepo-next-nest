@@ -8,6 +8,7 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
+import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
@@ -15,10 +16,11 @@ import TagIcon from "@mui/icons-material/Tag";
 import { FeedLayout } from "@repo/ui/feed/feed-layout";
 import { SpaceNav } from "@repo/ui/feed/space-nav";
 import { authClient } from "../../lib/auth-client";
+import { profileHref } from "../../lib/routes";
 import { SPACES } from "../../lib/spaces";
 
 interface FeedShellProps {
-  user: { name: string; image?: string | null };
+  user: { id: string; name: string; image?: string | null };
   children: ReactNode;
 }
 
@@ -55,12 +57,17 @@ const UserBox = ({ user }: Pick<FeedShellProps, "user">) => {
       >
         {user.name.charAt(0)}
       </Avatar>
-      <Typography
+      <MuiLink
+        component={Link}
+        href={profileHref(user.id) ?? "/feed"}
         noWrap
+        color="inherit"
+        underline="hover"
+        aria-label="Mi perfil"
         sx={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 500 }}
       >
         {user.name}
-      </Typography>
+      </MuiLink>
       <Button
         size="small"
         onClick={signOut}

@@ -19,7 +19,8 @@ export interface PostImage {
 }
 
 export interface PostCardProps {
-  author: { name: string; image?: string };
+  /** `href` enlaza al perfil del autor. */
+  author: { name: string; image?: string; href?: string };
   createdAt: Date;
   text?: string;
   space?: string;
@@ -64,7 +65,18 @@ export const PostCard = ({
       </Avatar>
       <Box sx={{ minWidth: 0 }}>
         <Typography noWrap sx={{ fontWeight: 600, fontSize: 15 }}>
-          {author.name}
+          {author.href ? (
+            <Link
+              component={linkComponent}
+              href={author.href}
+              color="inherit"
+              underline="hover"
+            >
+              {author.name}
+            </Link>
+          ) : (
+            author.name
+          )}
         </Typography>
         <Typography variant="body2" color="text.secondary" noWrap>
           {space && (

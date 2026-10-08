@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { isAdmin } from "../../lib/admins";
+import { profileFid, spaceFid } from "../../lib/feeds";
 import { auth } from "../../lib/auth";
 import { takeRateLimit } from "../../lib/rate-limit";
 import { canPostIn, findSpace } from "../../lib/spaces";
@@ -82,7 +83,7 @@ export async function createPost(input: {
   try {
     await stream.feeds.addActivity({
       type: "post",
-      feeds: [`space:${space.id}`, `user:${streamId}`],
+      feeds: [spaceFid(space.id), profileFid(streamId)],
       user_id: streamId,
       text,
       attachments: images.map((url) => ({

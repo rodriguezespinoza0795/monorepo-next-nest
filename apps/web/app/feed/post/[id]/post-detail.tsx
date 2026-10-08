@@ -19,16 +19,18 @@ import {
 import { CommentComposer } from "@repo/ui/feed/comment-composer";
 import { CommentItem } from "@repo/ui/feed/comment-item";
 import { PostCardSkeleton } from "@repo/ui/feed/post-card-skeleton";
+import { profileHref } from "../../../../lib/routes";
 import { ActivityPostCard } from "../../activity-post-card";
 
 const COMMENTS_PAGE_SIZE = 20;
 const MAX_COMMENT_LENGTH = 2000;
 
-type Author = { name: string; image?: string };
+type Author = { name: string; image?: string; href?: string };
 
 const authorOf = (comment: CommentResponse): Author => ({
   name: comment.user.name ?? comment.user.id,
   image: comment.user.image,
+  href: profileHref(comment.user.id),
 });
 
 // Composer de comentario o respuesta conectado a Stream.
@@ -114,6 +116,7 @@ const CommentThread = ({
 
   return (
     <CommentItem
+      linkComponent={Link}
       author={authorOf(comment)}
       createdAt={new Date(comment.created_at)}
       text={comment.text}
@@ -123,6 +126,7 @@ const CommentThread = ({
       {replies.length > 0 &&
         replies.map((reply) => (
           <CommentItem
+            linkComponent={Link}
             key={reply.id}
             author={authorOf(reply)}
             createdAt={new Date(reply.created_at)}

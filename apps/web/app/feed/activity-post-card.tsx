@@ -3,6 +3,7 @@
 import Link from "next/link";
 import type { ActivityResponse } from "@stream-io/feeds-react-sdk";
 import { PostCard } from "@repo/ui/feed/post-card";
+import { postHref, profileHref } from "../../lib/routes";
 import { findSpace } from "../../lib/spaces";
 import { isLikedByMe, useToggleLike } from "./use-toggle-like";
 
@@ -39,6 +40,7 @@ export const ActivityPostCard = ({
       author={{
         name: activity.user.name ?? activity.user.id,
         image: activity.user.image,
+        href: profileHref(activity.user.id),
       }}
       createdAt={new Date(activity.created_at)}
       text={activity.text}
@@ -48,7 +50,7 @@ export const ActivityPostCard = ({
       commentCount={activity.comment_count}
       liked={isLikedByMe(activity)}
       onToggleLike={() => void toggleLike(activity)}
-      href={linkToDetail ? `/feed/post/${activity.id}` : undefined}
+      href={linkToDetail ? postHref(activity.id) : undefined}
       linkComponent={Link}
     />
   );
