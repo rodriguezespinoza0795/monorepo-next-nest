@@ -1,3 +1,5 @@
 packages:
   - "apps/*"
   - "packages/*"
+allowBuilds:
+  '@stream-io/node-sdk': false
