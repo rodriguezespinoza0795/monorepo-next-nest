@@ -1,6 +1,6 @@
 # Plan v2 — Comunidad
 
-Estado: **en curso** (empezado el 2026-10-08). Hecho: PR 1 (rama `feat/v2-server-validation`). Decisiones tomadas: Upstash Redis para el límite compartido; Fase A primero. El plan v1 (6 PRs: login, feed, publicar e interactuar, espacios y perfil, notificaciones y moderación) está completo.
+Estado: **en curso** (empezado el 2026-10-08). Hecho: PR 1 (validaciones y límites) y PR 2 (editar y borrar lo propio, rama `feat/v2-edit-own`). Decisiones tomadas: Upstash Redis para el límite compartido; Fase A primero. El plan v1 (6 PRs: login, feed, publicar e interactuar, espacios y perfil, notificaciones y moderación) está completo.
 
 Objetivo: dejar la comunidad lista para producción y acercarla más a Circle, manteniendo la arquitectura actual: Stream Activity Feeds v3 en el plan gratuito, Better Auth sin base de datos y sin servidores propios. Primero la calidad, después las funciones.
 

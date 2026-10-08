@@ -58,12 +58,20 @@ await client.feeds.getOrCreateFeedGroup({
 });
 console.log("✓ feed group `profile`");
 
-// Los comentarios entran solo por la server action `addComment` (valida
-// largo, menciones, bloqueo y frecuencia). Se quita `add-comment` a los roles
-// de miembro en la visibilidad `visible` (espacios, perfiles, timelines) para
-// que nadie comente directo con su token. Admins y moderadores de Stream lo
-// conservan; el SDK de servidor no pasa por estos permisos.
+// Comentar, editar y borrar entran solo por server actions (`addComment`,
+// `updatePost`, `deleteOwnPost`, …), que validan largo, menciones, autoría,
+// bloqueo y frecuencia. Se quitan estos permisos a los roles de miembro en la
+// visibilidad `visible` (espacios, perfiles, timelines) para que nadie los
+// use directo con su token. Admins y moderadores de Stream los conservan; el
+// SDK de servidor no pasa por estos permisos.
 const MEMBER_ROLES = ["user", "feed_follower", "feed_member"];
+const SERVER_ONLY_PERMISSIONS = [
+  "add-comment",
+  "update-activities-owner",
+  "delete-activities-owner",
+  "update-comment-owner",
+  "delete-comment-owner",
+];
 const { feed_visibility } = await client.feeds.getFeedVisibility({
   name: SPACE_VISIBILITY,
 });
@@ -71,12 +79,14 @@ const grants = Object.fromEntries(
   Object.entries(feed_visibility.grants).map(([role, permissions]) => [
     role,
     MEMBER_ROLES.includes(role)
-      ? permissions.filter((permission) => permission !== "add-comment")
+      ? permissions.filter(
+          (permission) => !SERVER_ONLY_PERMISSIONS.includes(permission),
+        )
       : permissions,
   ]),
 );
 await client.feeds.updateFeedVisibility({ name: SPACE_VISIBILITY, grants });
-console.log("✓ comentarios solo por el servidor");
+console.log("✓ comentar, editar y borrar solo por el servidor");
 
 // Perfiles de los miembros que ya existen (los nuevos los crea el onboarding),
 // para que nadie se adelante a crearlos y quede como dueño.

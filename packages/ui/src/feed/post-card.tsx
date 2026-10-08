@@ -1,6 +1,6 @@
 "use client";
 
-import type { ElementType } from "react";
+import type { ElementType, ReactNode } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -36,6 +36,12 @@ export interface PostCardProps {
   onToggleLike?: () => void;
   /** Componente de enlace de la app (por ejemplo `next/link`). */
   linkComponent?: ElementType;
+  /** Muestra "· editado" junto a la fecha. */
+  edited?: boolean;
+  /** Menú de acciones (arriba a la derecha), por ejemplo `ItemMenu`. */
+  menu?: ReactNode;
+  /** Si está, reemplaza el texto (edición en el lugar). */
+  editor?: ReactNode;
 }
 
 const LIKE_COLOR = "#F472B6";
@@ -61,13 +67,16 @@ export const PostCard = ({
   liked = false,
   onToggleLike,
   linkComponent = "a",
+  edited = false,
+  menu,
+  editor,
 }: PostCardProps) => (
   <Card component="article" sx={{ p: { xs: 2.5, sm: 3 } }}>
     <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 2 }}>
       <Avatar src={author.image} alt={author.name}>
         {author.name.charAt(0)}
       </Avatar>
-      <Box sx={{ minWidth: 0 }}>
+      <Box sx={{ minWidth: 0, flex: 1 }}>
         <Typography noWrap sx={{ fontWeight: 600, fontSize: 15 }}>
           {author.href ? (
             <Link
@@ -107,11 +116,14 @@ export const PostCard = ({
           ) : (
             <RelativeTime date={createdAt} />
           )}
+          {edited && " · editado"}
         </Typography>
       </Box>
+      {menu && <Box sx={{ alignSelf: "flex-start", mr: -1 }}>{menu}</Box>}
     </Stack>
 
-    {text && (
+    {editor}
+    {!editor && text && (
       <Typography
         sx={{
           whiteSpace: "pre-wrap",

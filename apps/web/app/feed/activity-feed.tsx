@@ -81,6 +81,14 @@ const ActivityList = ({
           activity={activity}
           showSpace={showSpace}
           linkToDetail
+          // Tras editar o eliminar lo propio se recarga la primera página
+          // (el tiempo real puede perder el evento si llega al suscribirse).
+          onChanged={() =>
+            feed
+              .getOrCreate({ watch: true, limit: PAGE_SIZE })
+              .then(() => {})
+              .catch(() => {})
+          }
         />
       ))}
       <Box ref={sentinel} />

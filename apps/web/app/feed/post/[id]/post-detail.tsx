@@ -1,7 +1,15 @@
 "use client";
 
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Alert from "@mui/material/Alert";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
@@ -20,10 +28,11 @@ import { CommentComposer } from "@repo/ui/feed/comment-composer";
 import { CommentItem } from "@repo/ui/feed/comment-item";
 import { PostCardSkeleton } from "@repo/ui/feed/post-card-skeleton";
 import { profileHref } from "../../../../lib/routes";
-import { addComment } from "../../actions";
+import { addComment, deleteOwnComment, updateComment } from "../../actions";
 import { ActivityPostCard } from "../../activity-post-card";
 import { RequireFeedsClient } from "../../require-feeds-client";
 import { useMentions } from "../../use-mentions";
+import { useOwnContent } from "../../use-own-content";
 
 const COMMENTS_PAGE_SIZE = 20;
 const MAX_COMMENT_LENGTH = 2000;
@@ -126,6 +135,55 @@ const ConnectedCommentComposer = ({
   );
 };
 
+// Un comentario o respuesta; si es propio, con "Editar" y "Eliminar".
+const ConnectedCommentItem = ({
+  comment,
+  onReply,
+  children,
+}: {
+  comment: CommentResponse;
+  onReply: () => void;
+  children?: ReactNode;
+}) => {
+  const me = useClientConnectedUser();
+  const refreshComments = useContext(RefreshCommentsContext);
+  const own = useOwnContent({
+    kind: "comment",
+    text: comment.text ?? "",
+    mentions: comment.mentioned_users.map((user) => ({
+      id: user.id,
+      name: user.name ?? user.id,
+      image: user.image,
+    })),
+    maxLength: MAX_COMMENT_LENGTH,
+    save: (text, mentionedUserIds) =>
+      updateComment({ commentId: comment.id, text, mentionedUserIds }),
+    remove: () => deleteOwnComment(comment.id),
+    onSaved: refreshComments,
+    onDeleted: refreshComments,
+  });
+  const isMine = me?.id === comment.user.id && comment.status !== "deleted";
+
+  return (
+    <CommentItem
+      linkComponent={Link}
+      author={authorOf(comment)}
+      createdAt={new Date(comment.created_at)}
+      text={comment.text}
+      mentions={mentionsOf(comment)}
+      deleted={comment.status === "deleted"}
+      edited={Boolean(comment.edited_at)}
+      onReply={onReply}
+      menu={isMine ? own.menu : undefined}
+      editor={isMine ? own.editor : undefined}
+    >
+      {isMine && own.error && <Alert severity="error">{own.error}</Alert>}
+      {isMine && own.dialog}
+      {children}
+    </CommentItem>
+  );
+};
+
 // Comentario de primer nivel con sus respuestas (un solo nivel de hilo:
 // responder a una respuesta cuelga del mismo comentario raíz).
 const CommentThread = ({
@@ -145,25 +203,12 @@ const CommentThread = ({
   const hidden = comment.reply_count - replies.length;
 
   return (
-    <CommentItem
-      linkComponent={Link}
-      author={authorOf(comment)}
-      createdAt={new Date(comment.created_at)}
-      text={comment.text}
-      mentions={mentionsOf(comment)}
-      deleted={comment.status === "deleted"}
-      onReply={() => setReplying(true)}
-    >
+    <ConnectedCommentItem comment={comment} onReply={() => setReplying(true)}>
       {replies.length > 0 &&
         replies.map((reply) => (
-          <CommentItem
-            linkComponent={Link}
+          <ConnectedCommentItem
             key={reply.id}
-            author={authorOf(reply)}
-            createdAt={new Date(reply.created_at)}
-            text={reply.text}
-            mentions={mentionsOf(reply)}
-            deleted={reply.status === "deleted"}
+            comment={reply}
             onReply={() => setReplying(true)}
           />
         ))}
@@ -185,7 +230,7 @@ const CommentThread = ({
           autoFocus
         />
       )}
-    </CommentItem>
+    </ConnectedCommentItem>
   );
 };
 
@@ -238,6 +283,7 @@ const Comments = ({ activity }: { activity: ActivityWithStateUpdates }) => {
 
 const ConnectedPostDetail = ({ activityId }: { activityId: string }) => {
   const client = useFeedsClient();
+  const router = useRouter();
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     "loading",
   );
@@ -308,7 +354,12 @@ const ConnectedPostDetail = ({ activityId }: { activityId: string }) => {
       )}
       {status === "ready" && activity && activityWithState && (
         <RefreshCommentsContext value={refreshComments}>
-          <ActivityPostCard activity={activity} showSpace />
+          <ActivityPostCard
+            activity={activity}
+            showSpace
+            onChanged={refreshComments}
+            onDeleted={() => router.push("/feed")}
+          />
           <Comments activity={activityWithState} />
         </RefreshCommentsContext>
       )}

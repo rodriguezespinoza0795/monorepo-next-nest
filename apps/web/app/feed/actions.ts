@@ -211,3 +211,161 @@ const userExists = async (id: string) => {
   });
   return users.length > 0;
 };
+
+// --- Editar y borrar lo propio -------------------------------------------
+// Solo el autor, y solo por aquí: los miembros no tienen en Stream los
+// permisos `update-*-owner` ni `delete-*-owner` (los quita `stream:setup`).
+// Borrar es suave: lo eliminado aparece en el panel de moderación y un
+// administrador puede restaurarlo.
+
+const findPost = (id: string) =>
+  stream.feeds
+    .getActivity({ id })
+    .then(({ activity }) => activity)
+    .catch(() => undefined);
+
+export async function updatePost(input: {
+  activityId: string;
+  text: string;
+  mentionedUserIds?: string[];
+}): Promise<ActionResult> {
+  if (
+    typeof input?.activityId !== "string" ||
+    typeof input.text !== "string" ||
+    (input.mentionedUserIds !== undefined &&
+      !isStreamIdList(input.mentionedUserIds))
+  ) {
+    return fail("Datos inválidos.");
+  }
+  const session = await memberSession();
+  if ("ok" in session) return session;
+
+  const { streamId } = session.user;
+  const activity = await findPost(input.activityId);
+  if (!activity || activity.type !== "post") {
+    return fail("Esta publicación ya no existe.");
+  }
+  if (activity.user.id !== streamId) {
+    return fail("Solo puedes editar tus publicaciones.");
+  }
+
+  const text = input.text.trim();
+  if (!text && activity.attachments.length === 0) {
+    return fail("La publicación no puede quedar vacía.");
+  }
+  if (text.length > MAX_TEXT_LENGTH) {
+    return fail(`Máximo ${MAX_TEXT_LENGTH} caracteres.`);
+  }
+  const mentionedUserIds = await validMentions(
+    input.mentionedUserIds ?? [],
+    streamId,
+  );
+
+  try {
+    await stream.feeds.updateActivityPartial({
+      id: activity.id,
+      user_id: streamId,
+      set: { text, mentioned_user_ids: mentionedUserIds },
+      // Avisa solo a quien se menciona por primera vez al editar.
+      handle_mention_notifications: true,
+    });
+    return { ok: true };
+  } catch (error) {
+    console.error("[stream] no se pudo editar la publicación", error);
+    return fail("No pudimos guardar los cambios. Inténtalo de nuevo.");
+  }
+}
+
+export async function deleteOwnPost(activityId: string): Promise<ActionResult> {
+  if (typeof activityId !== "string") return fail("Datos inválidos.");
+  const session = await memberSession();
+  if ("ok" in session) return session;
+
+  const activity = await findPost(activityId);
+  if (!activity || activity.type !== "post") {
+    return fail("Esta publicación ya no existe.");
+  }
+  if (activity.user.id !== session.user.streamId) {
+    return fail("Solo puedes eliminar tus publicaciones.");
+  }
+  try {
+    await stream.feeds.deleteActivity({ id: activity.id });
+    return { ok: true };
+  } catch (error) {
+    console.error("[stream] no se pudo eliminar la publicación", error);
+    return fail("No pudimos eliminar la publicación. Inténtalo de nuevo.");
+  }
+}
+
+export async function updateComment(input: {
+  commentId: string;
+  text: string;
+  mentionedUserIds?: string[];
+}): Promise<ActionResult> {
+  if (
+    typeof input?.commentId !== "string" ||
+    typeof input.text !== "string" ||
+    (input.mentionedUserIds !== undefined &&
+      !isStreamIdList(input.mentionedUserIds))
+  ) {
+    return fail("Datos inválidos.");
+  }
+  const session = await memberSession();
+  if ("ok" in session) return session;
+
+  const { streamId } = session.user;
+  const comment = await findComment(input.commentId);
+  if (!comment || comment.status === "deleted") {
+    return fail("Ese comentario ya no existe.");
+  }
+  if (comment.user.id !== streamId) {
+    return fail("Solo puedes editar tus comentarios.");
+  }
+
+  const text = input.text.trim();
+  if (!text) return fail("Escribe un comentario.");
+  if (text.length > MAX_COMMENT_LENGTH) {
+    return fail(`Máximo ${MAX_COMMENT_LENGTH} caracteres.`);
+  }
+  const mentionedUserIds = await validMentions(
+    input.mentionedUserIds ?? [],
+    streamId,
+  );
+
+  try {
+    await stream.feeds.updateComment({
+      id: comment.id,
+      user_id: streamId,
+      comment: text,
+      mentioned_user_ids: mentionedUserIds,
+      handle_mention_notifications: true,
+    });
+    return { ok: true };
+  } catch (error) {
+    console.error("[stream] no se pudo editar el comentario", error);
+    return fail("No pudimos guardar los cambios. Inténtalo de nuevo.");
+  }
+}
+
+export async function deleteOwnComment(
+  commentId: string,
+): Promise<ActionResult> {
+  if (typeof commentId !== "string") return fail("Datos inválidos.");
+  const session = await memberSession();
+  if ("ok" in session) return session;
+
+  const comment = await findComment(commentId);
+  if (!comment || comment.status === "deleted") {
+    return fail("Ese comentario ya no existe.");
+  }
+  if (comment.user.id !== session.user.streamId) {
+    return fail("Solo puedes eliminar tus comentarios.");
+  }
+  try {
+    await stream.feeds.deleteComment({ id: comment.id });
+    return { ok: true };
+  } catch (error) {
+    console.error("[stream] no se pudo eliminar el comentario", error);
+    return fail("No pudimos eliminar el comentario. Inténtalo de nuevo.");
+  }
+}

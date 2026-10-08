@@ -14,11 +14,14 @@ const DEBOUNCE_MS = 150;
 // Autocompletado de @menciones para un composer: busca miembros por nombre y
 // recuerda a quién se eligió. Al publicar, solo cuentan las menciones cuyo
 // `@Nombre` sigue en el texto.
-export const useMentions = () => {
+export const useMentions = (
+  /** Menciones que ya tiene el texto (al editar). */
+  initial: MentionUser[] = [],
+) => {
   const client = useFeedsClient();
   const me = useClientConnectedUser();
   const [suggestions, setSuggestions] = useState<MentionUser[]>([]);
-  const [selected, setSelected] = useState<MentionUser[]>([]);
+  const [selected, setSelected] = useState<MentionUser[]>(initial);
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const latest = useRef(0);
 
@@ -76,6 +79,6 @@ export const useMentions = () => {
       selected
         .filter((user) => text.includes(`@${user.name}`))
         .map((user) => user.id),
-    reset: () => setSelected([]),
+    reset: (next: MentionUser[] = []) => setSelected(next),
   };
 };
