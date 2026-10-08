@@ -1,16 +1,26 @@
 name: E2E
 
-# Bajo demanda (Actions → E2E → Run workflow): usa la app de Stream de
-# pruebas, no la real. Necesita estos secrets del repo:
+# En cada PR a `main` y bajo demanda (Actions → E2E → Run workflow). Usa la
+# app de Stream de pruebas, no la real (cada corrida crea unos 8 posts). Los
+# PRs desde forks no reciben secrets, así que ahí no corre. Necesita estos
+# secrets del repo:
 #   STREAM_TEST_API_KEY, STREAM_TEST_API_SECRET
 #   UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN (opcionales: sin ellos
 #   se salta la prueba del límite de frecuencia)
 on:
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: e2e-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   e2e:
     name: Pruebas de punta a punta
+    # Sin secrets (PR desde un fork) no hay app de pruebas a la que conectar.
+    if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -21,16 +31,16 @@ jobs:
       UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
       BETTER_AUTH_SECRET: e2e-ci-secret-at-least-32-characters-long
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter web exec playwright install --with-deps chromium
       - run: pnpm --filter web test:e2e
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
