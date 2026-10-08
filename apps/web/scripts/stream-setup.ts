@@ -1,20 +1,23 @@
-// Prepara la app de Stream: crea el feed group `space` y los espacios iniciales.
-// Es idempotente; se puede correr las veces que haga falta:
+// Prepara la app de Stream: crea el feed group `space`, los espacios y las
+// publicaciones de bienvenida. Es idempotente; se puede correr las veces que
+// haga falta:
 //   pnpm --filter web stream:setup
 import { StreamClient } from "@stream-io/node-sdk";
+import { SPACES } from "../lib/spaces.ts";
 
-const SYSTEM_USER = { id: "system", name: "getStream" };
+const SYSTEM_USER = { id: "system", name: "Equipo getStream" };
 
-const SPACES = [
+// Ids fijos para que volver a correr el script no duplique las publicaciones.
+const WELCOME_POSTS = [
   {
-    id: "general",
-    name: "General",
-    description: "Conversaciones abiertas de la comunidad.",
+    id: "welcome-anuncios",
+    space: "anuncios",
+    text: "¡Bienvenida, bienvenido a la comunidad! 👋\n\nEste es el espacio de anuncios: aquí publicaremos las novedades del equipo. Para conversar, pasa a General.",
   },
   {
-    id: "anuncios",
-    name: "Anuncios",
-    description: "Novedades del equipo.",
+    id: "welcome-general",
+    space: "general",
+    text: "Preséntate 🙌\n\nCuéntanos quién eres, en qué trabajas y qué te gustaría encontrar en esta comunidad.",
   },
 ];
 
@@ -47,3 +50,14 @@ for (const space of SPACES) {
   });
   console.log(`✓ space:${space.id}${created ? " (creado)" : ""}`);
 }
+
+await client.feeds.upsertActivities({
+  activities: WELCOME_POSTS.map((post) => ({
+    id: post.id,
+    type: "post",
+    feeds: [`space:${post.space}`],
+    text: post.text,
+    user_id: SYSTEM_USER.id,
+  })),
+});
+console.log(`✓ ${WELCOME_POSTS.length} publicaciones de bienvenida`);

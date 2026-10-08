@@ -2,6 +2,7 @@ import "server-only";
 import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
+import { onboardStreamUser } from "./onboarding";
 
 // Sesiones sin base de datos: la sesión y la cuenta viven en cookies cifradas.
 // El `id` que genera Better Auth sin base de datos no es estable entre
@@ -23,6 +24,23 @@ export const auth = betterAuth({
   },
   databaseHooks: {
     user: {
+      create: {
+        // Sin base de datos el usuario se "crea" en cada inicio de sesión tras
+        // un reinicio del servidor; el onboarding es idempotente. Si Stream
+        // falla no se bloquea el login: el feed se verá vacío hasta el
+        // siguiente inicio de sesión.
+        after: async (user) => {
+          try {
+            await onboardStreamUser({
+              id: user.streamId as string,
+              name: user.name,
+              image: user.image,
+            });
+          } catch (error) {
+            console.error("[stream] onboarding falló", error);
+          }
+        },
+      },
       update: {
         // `streamId` solo se asigna al crear el usuario desde Google. Una
         // actualización que lo incluya (por ejemplo, vía `/update-user`) se

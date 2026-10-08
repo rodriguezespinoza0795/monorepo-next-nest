@@ -3,10 +3,7 @@
 import type { ReactNode } from "react";
 import Box from "@mui/material/Box";
 import CircularProgress from "@mui/material/CircularProgress";
-import {
-  StreamFeeds,
-  useCreateFeedsClient,
-} from "@stream-io/feeds-react-sdk";
+import { StreamFeeds, useCreateFeedsClient } from "@stream-io/feeds-react-sdk";
 
 interface FeedsProviderProps {
   user: { id: string; name: string; image?: string | null };
