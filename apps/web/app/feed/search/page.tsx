@@ -16,7 +16,7 @@ import {
   normalizeQuery,
   searchMembers,
   searchPosts,
-} from "../../../lib/search";
+} from "@repo/community/search";
 import { SPACES } from "../../../lib/spaces";
 import {
   MemberResults,
@@ -95,7 +95,7 @@ export default async function SearchPage({
   }
 
   const [{ posts, next: nextPage }, users] = await Promise.all([
-    searchPosts(query, next),
+    searchPosts({ query, next }),
     searchMembers(query),
   ]);
 
