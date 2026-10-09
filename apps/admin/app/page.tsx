@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
+import CardActionArea from "@mui/material/CardActionArea";
 import CardContent from "@mui/material/CardContent";
 import Chip from "@mui/material/Chip";
 import Container from "@mui/material/Container";
@@ -11,18 +12,31 @@ import { SiteFooter } from "@repo/ui/site-footer";
 import { SiteHeader } from "@repo/ui/site-header";
 import { ADMIN_BRAND } from "@repo/community/brand";
 
+// Secciones reales del panel (sin sesión, el panel redirige al login).
 const sections = [
   {
-    title: "Usuarios",
-    description: "Gestiona cuentas, roles y permisos de acceso.",
+    title: "Publicaciones",
+    description:
+      "Lo más reciente de todos los espacios: elimina contenido o bloquea a su autor.",
+    href: "/moderacion",
   },
   {
-    title: "Contenido",
-    description: "Revisa, publica y organiza la información del sitio.",
+    title: "Buscar",
+    description:
+      "Encuentra publicaciones y miembros, también los bloqueados, y revisa todo lo de un autor.",
+    href: "/moderacion/buscar",
   },
   {
-    title: "Configuración",
-    description: "Ajusta las preferencias generales de la plataforma.",
+    title: "Eliminadas",
+    description:
+      "Publicaciones borradas por sus autores o por moderación: restáuralas o elimínalas para siempre.",
+    href: "/moderacion/eliminadas",
+  },
+  {
+    title: "Bloqueados",
+    description:
+      "Miembros bloqueados de la comunidad; desbloquéalos cuando proceda.",
+    href: "/moderacion/bloqueados",
   },
 ];
 
@@ -80,27 +94,32 @@ export default function Home() {
             <Typography variant="h1">Bienvenido</Typography>
 
             <Typography variant="subtitle1" sx={{ maxWidth: 520 }}>
-              Administra los usuarios, el contenido y la configuración de la
-              plataforma desde un solo lugar.
+              Modera las publicaciones y los miembros de la comunidad desde un
+              solo lugar.
             </Typography>
 
-            <Button variant="contained" size="large" href="#">
+            <Button variant="contained" size="large" href="/moderacion">
               Acceder al panel →
             </Button>
           </Stack>
 
           <Grid container spacing={3}>
             {sections.map((section) => (
-              <Grid key={section.title} size={{ xs: 12, md: 4 }}>
+              <Grid key={section.title} size={{ xs: 12, sm: 6, md: 3 }}>
                 <Card sx={{ height: "100%" }}>
-                  <CardContent sx={{ p: 4 }}>
-                    <Typography variant="h3" gutterBottom>
-                      {section.title}
-                    </Typography>
-                    <Typography color="text.secondary">
-                      {section.description}
-                    </Typography>
-                  </CardContent>
+                  <CardActionArea
+                    href={section.href}
+                    sx={{ height: "100%", alignItems: "flex-start" }}
+                  >
+                    <CardContent sx={{ p: 4 }}>
+                      <Typography variant="h3" gutterBottom>
+                        {section.title}
+                      </Typography>
+                      <Typography color="text.secondary">
+                        {section.description}
+                      </Typography>
+                    </CardContent>
+                  </CardActionArea>
                 </Card>
               </Grid>
             ))}

@@ -24,6 +24,7 @@ export default async function ModerationLayout({
                 { label: "Publicaciones", href: "/moderacion" },
                 { label: "Eliminadas", href: "/moderacion/eliminadas" },
                 { label: "Bloqueados", href: "/moderacion/bloqueados" },
+                { label: "Buscar", href: "/moderacion/buscar" },
               ]
             : []
         }

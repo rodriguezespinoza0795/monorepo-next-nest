@@ -1,33 +1,36 @@
 "use client";
 
 import { useTransition } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { SearchField } from "@repo/ui/feed/search-field";
 
-// Buscador: actualiza `?q=` y el servidor devuelve los resultados. Conserva
-// la pestaña elegida.
+// Buscador del panel: actualiza `?q=` (conserva pestaña y autor).
 export const SearchForm = ({
   initialQuery,
   tab,
+  author,
   minLength,
   maxLength,
 }: {
   initialQuery: string;
   tab: string;
+  author?: string;
   minLength: number;
   maxLength: number;
 }) => {
   const router = useRouter();
-  const pathname = usePathname();
   const [pending, startTransition] = useTransition();
 
   const search = (query: string) => {
     const params = new URLSearchParams();
     if (query) params.set("q", query);
     if (tab !== "posts") params.set("tab", tab);
+    if (author) params.set("author", author);
     const qs = params.toString();
     startTransition(() =>
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false }),
+      router.replace(`/moderacion/buscar${qs ? `?${qs}` : ""}`, {
+        scroll: false,
+      }),
     );
   };
 
@@ -36,8 +39,12 @@ export const SearchForm = ({
       initialQuery={initialQuery}
       onSearch={search}
       pending={pending}
-      placeholder="Busca publicaciones o miembros"
-      label="Buscar en la comunidad"
+      placeholder={
+        author
+          ? "Filtra sus publicaciones por texto"
+          : "Busca publicaciones o miembros"
+      }
+      label="Buscar en el panel"
       minLength={minLength}
       maxLength={maxLength}
     />
