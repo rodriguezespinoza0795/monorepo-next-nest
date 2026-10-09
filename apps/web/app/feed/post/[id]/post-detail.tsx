@@ -32,7 +32,14 @@ import { addComment, deleteOwnComment, updateComment } from "../../actions";
 import { ActivityPostCard } from "../../activity-post-card";
 import { RequireFeedsClient } from "../../require-feeds-client";
 import { useMentions } from "../../use-mentions";
+import { linkPreviewsOf } from "@repo/community/attachments";
+import { isEdited } from "../../../../lib/edited";
 import { useOwnContent } from "../../use-own-content";
+import {
+  commentLikeCount,
+  isCommentLikedByMe,
+  useToggleCommentLike,
+} from "../../use-toggle-comment-like";
 
 const COMMENTS_PAGE_SIZE = 20;
 const MAX_COMMENT_LENGTH = 2000;
@@ -163,6 +170,7 @@ const ConnectedCommentItem = ({
     onDeleted: refreshComments,
   });
   const isMine = me?.id === comment.user.id && comment.status !== "deleted";
+  const toggleLike = useToggleCommentLike();
 
   return (
     <CommentItem
@@ -172,8 +180,12 @@ const ConnectedCommentItem = ({
       text={comment.text}
       mentions={mentionsOf(comment)}
       deleted={comment.status === "deleted"}
-      edited={Boolean(comment.edited_at)}
+      edited={isEdited(comment)}
+      linkPreviews={linkPreviewsOf(comment.attachments, comment.text)}
       onReply={onReply}
+      likeCount={commentLikeCount(comment)}
+      liked={isCommentLikedByMe(comment)}
+      onToggleLike={() => void toggleLike(comment)}
       menu={isMine ? own.menu : undefined}
       editor={isMine ? own.editor : undefined}
     >

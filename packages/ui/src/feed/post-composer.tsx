@@ -14,7 +14,12 @@ import TextField from "@mui/material/TextField";
 import Tooltip from "@mui/material/Tooltip";
 import CloseIcon from "@mui/icons-material/Close";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import { InsertLinkButton } from "./insert-link-button";
 import { MentionTextField, type MentionUser } from "./mention-text-field";
+
+// Agrega el enlace al final del texto (con un espacio de separación).
+const appendLink = (value: string, markdown: string) =>
+  value.trim() ? `${value.trimEnd()} ${markdown} ` : `${markdown} `;
 
 export interface ComposerImage {
   id: string;
@@ -173,6 +178,10 @@ export const PostComposer = ({
             spacing={1}
             sx={{ mt: 1.5, alignItems: "center", flexWrap: "wrap", rowGap: 1 }}
           >
+            <InsertLinkButton
+              onInsert={(markdown) => onChange(appendLink(value, markdown))}
+              disabled={submitting}
+            />
             {onAddImages && (
               <>
                 <Tooltip title={`Agregar imágenes (máx. ${maxImages})`}>
