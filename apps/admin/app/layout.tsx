@@ -3,6 +3,7 @@ import { Inter, Montserrat } from "next/font/google";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { ThemeProvider } from "@repo/ui/theme-provider";
 import "./globals.css";
+import { ADMIN_BRAND, BRAND } from "@repo/community/brand";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,8 +16,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "getStream Admin",
-  description: "Panel de administración de getStream",
+  title: ADMIN_BRAND,
+  description: `Panel de moderación de ${BRAND.name}`,
 };
 
 export default function RootLayout({

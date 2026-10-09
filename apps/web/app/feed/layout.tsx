@@ -7,6 +7,7 @@ import { FeedShell } from "./feed-shell";
 import { FeedsProvider } from "./feeds-provider";
 import { NotificationsMenu } from "./notifications-menu";
 import { SuspendedNotice } from "./suspended-notice";
+import { BRAND } from "@repo/community/brand";
 
 export default async function FeedLayout({ children }: LayoutProps<"/feed">) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -18,7 +19,10 @@ export default async function FeedLayout({ children }: LayoutProps<"/feed">) {
   if (await isBanned(streamId)) {
     return (
       <>
-        <SiteHeader brand="getStream" action={{ label: "Inicio", href: "/" }} />
+        <SiteHeader
+          brand={BRAND.name}
+          action={{ label: "Inicio", href: "/" }}
+        />
         <SuspendedNotice />
       </>
     );
@@ -27,7 +31,7 @@ export default async function FeedLayout({ children }: LayoutProps<"/feed">) {
   return (
     <FeedsProvider user={user}>
       <SiteHeader
-        brand="getStream"
+        brand={BRAND.name}
         action={{ label: "Inicio", href: "/" }}
         extra={<NotificationsMenu />}
       />

@@ -7,12 +7,13 @@ import { canPostIn, findSpace } from "../../../lib/spaces";
 import { FeedHeader } from "@repo/ui/feed/feed-header";
 import { ActivityFeed } from "../activity-feed";
 import { SpaceMembershipButton } from "../space-membership-button";
+import { BRAND } from "@repo/community/brand";
 
 export async function generateMetadata({
   params,
 }: PageProps<"/feed/[space]">): Promise<Metadata> {
   const space = findSpace((await params).space);
-  return { title: `${space?.name ?? "Espacio"} · getStream` };
+  return { title: `${space?.name ?? "Espacio"} · ${BRAND.name}` };
 }
 
 export default async function SpacePage({

@@ -5,8 +5,9 @@ import Box from "@mui/material/Box";
 import { SiteHeader } from "@repo/ui/site-header";
 import { auth } from "../../lib/auth";
 import { LoginForm } from "./login-form";
+import { BRAND } from "@repo/community/brand";
 
-export const metadata: Metadata = { title: "Acceder · getStream" };
+export const metadata: Metadata = { title: `Acceder · ${BRAND.name}` };
 
 const accentGlow =
   "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(99, 102, 241, 0.22), transparent 70%)";
@@ -17,7 +18,7 @@ export default async function LoginPage() {
 
   return (
     <>
-      <SiteHeader brand="getStream" action={{ label: "Inicio", href: "/" }} />
+      <SiteHeader brand={BRAND.name} action={{ label: "Inicio", href: "/" }} />
       <Box
         component="main"
         sx={{

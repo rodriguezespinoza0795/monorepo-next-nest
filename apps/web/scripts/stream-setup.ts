@@ -6,8 +6,9 @@ import { StreamClient } from "@stream-io/node-sdk";
 import { SYSTEM_USER_ID } from "../lib/feeds.ts";
 import { getOrCreateOwnedFeed } from "../lib/owned-feed.ts";
 import { SPACES } from "../lib/spaces.ts";
+import { TEAM_NAME } from "@repo/community/brand";
 
-const SYSTEM_USER = { id: SYSTEM_USER_ID, name: "Equipo getStream" };
+const SYSTEM_USER = { id: SYSTEM_USER_ID, name: TEAM_NAME };
 
 // Ids fijos para que volver a correr el script no duplique las publicaciones.
 const WELCOME_POSTS = [

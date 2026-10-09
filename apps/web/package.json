@@ -11,7 +11,8 @@
     "check-types": "next typegen && tsc --noEmit",
     "stream:setup": "node --env-file=.env.local scripts/stream-setup.ts",
     "test:e2e": "playwright test",
-    "stream:setup:test": "node --env-file=.env.test.local scripts/stream-setup.ts"
+    "stream:setup:test": "node --env-file=.env.test.local scripts/stream-setup.ts",
+    "stream:setup:prod": "node --env-file=.env.stream-production.local scripts/stream-setup.ts"
   },
   "dependencies": {
     "@emotion/cache": "^11.14.0",

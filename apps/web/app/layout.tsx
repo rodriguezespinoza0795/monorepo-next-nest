@@ -3,6 +3,7 @@ import { Inter, Montserrat } from "next/font/google";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import { ThemeProvider } from "@repo/ui/theme-provider";
 import "./globals.css";
+import { BRAND } from "@repo/community/brand";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -15,8 +16,8 @@ const montserrat = Montserrat({
 });
 
 export const metadata: Metadata = {
-  title: "getStream",
-  description: "getStream",
+  title: BRAND.name,
+  description: BRAND.description,
 };
 
 export default function RootLayout({

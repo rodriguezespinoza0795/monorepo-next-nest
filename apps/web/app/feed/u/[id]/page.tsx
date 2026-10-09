@@ -7,6 +7,7 @@ import { SYSTEM_USER_ID } from "../../../../lib/feeds";
 import { getOrCreateOwnedFeed } from "../../../../lib/owned-feed";
 import { stream } from "../../../../lib/stream";
 import { ActivityFeed } from "../../activity-feed";
+import { BRAND } from "@repo/community/brand";
 
 const STREAM_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
@@ -22,7 +23,7 @@ export async function generateMetadata({
   params,
 }: PageProps<"/feed/u/[id]">): Promise<Metadata> {
   const member = await findMember(decodeURIComponent((await params).id));
-  return { title: `${member?.name ?? "Perfil"} · getStream` };
+  return { title: `${member?.name ?? "Perfil"} · ${BRAND.name}` };
 }
 
 export default async function ProfilePage({
