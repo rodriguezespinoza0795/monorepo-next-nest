@@ -5,7 +5,7 @@ import { isAdmin } from "../../lib/admins";
 import { isUploadedImage } from "@repo/community/attachments";
 import { auth } from "../../lib/auth";
 import { EDITED_AT } from "../../lib/edited";
-import { profileFid, spaceFid } from "../../lib/feeds";
+import { profileFid, SYSTEM_USER_ID, spaceFid } from "../../lib/feeds";
 import { isBanned } from "../../lib/membership";
 import { isStreamIdList, validMentions } from "../../lib/mentions";
 import { takeRateLimit } from "../../lib/rate-limit";
@@ -378,5 +378,79 @@ export async function deleteOwnComment(
   } catch (error) {
     console.error("[stream] no se pudo eliminar el comentario", error);
     return fail("No pudimos eliminar el comentario. Inténtalo de nuevo.");
+  }
+}
+
+// Destacar ("fijar") una publicación arriba de su espacio: solo admins y por
+// el servidor (a los miembros se les quita `pin-activity-owner` en
+// `stream:setup`). Un destacado por espacio: fijar uno desfija el anterior.
+const spaceOf = (activity: { feeds: string[] }) => {
+  const fid = activity.feeds.find((feed) => feed.startsWith("space:"));
+  return fid ? fid.slice("space:".length) : undefined;
+};
+
+const adminSession = async () => {
+  const session = await memberSession();
+  if ("ok" in session) return session;
+  if (!isAdmin(session.user.email)) {
+    return fail("Solo un administrador puede destacar publicaciones.");
+  }
+  return session;
+};
+
+export async function setPostPinned(
+  activityId: string,
+  pinned: boolean,
+): Promise<ActionResult> {
+  if (typeof activityId !== "string" || typeof pinned !== "boolean") {
+    return fail("Datos inválidos.");
+  }
+  const session = await adminSession();
+  if ("ok" in session) return session;
+
+  const activity = await findPost(activityId);
+  const spaceId = activity?.type === "post" ? spaceOf(activity) : undefined;
+  if (!activity || !spaceId) return fail("Esta publicación ya no existe.");
+
+  const feed = { feed_group_id: "space", feed_id: spaceId };
+  try {
+    if (pinned) {
+      const { pinned_activities } = await stream.feeds.getOrCreateFeed({
+        ...feed,
+        user_id: SYSTEM_USER_ID,
+        limit: 1,
+      });
+      await Promise.all(
+        pinned_activities
+          .filter((pin) => pin.activity.id !== activity.id)
+          .map((pin) =>
+            stream.feeds.unpinActivity({
+              ...feed,
+              activity_id: pin.activity.id,
+              user_id: SYSTEM_USER_ID,
+            }),
+          ),
+      );
+      if (!pinned_activities.some((pin) => pin.activity.id === activity.id)) {
+        await stream.feeds.pinActivity({
+          ...feed,
+          activity_id: activity.id,
+          user_id: SYSTEM_USER_ID,
+        });
+      }
+    } else {
+      await stream.feeds.unpinActivity({
+        ...feed,
+        activity_id: activity.id,
+        user_id: SYSTEM_USER_ID,
+      });
+    }
+    console.info(
+      `[moderación] ${session.user.email} ${pinned ? "destacó" : "quitó el destacado de"} ${activity.id}`,
+    );
+    return { ok: true };
+  } catch (error) {
+    console.error("[stream] no se pudo cambiar el destacado", error);
+    return fail("No pudimos cambiar el destacado. Inténtalo de nuevo.");
   }
 }

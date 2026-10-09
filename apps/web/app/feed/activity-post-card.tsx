@@ -3,6 +3,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import Alert from "@mui/material/Alert";
+import PushPinIcon from "@mui/icons-material/PushPin";
+import PushPinOutlinedIcon from "@mui/icons-material/PushPinOutlined";
+import { ItemMenu, type ItemMenuAction } from "@repo/ui/feed/item-menu";
 import {
   useClientConnectedUser,
   type ActivityResponse,
@@ -12,7 +15,8 @@ import { isUploadedImage, linkPreviewsOf } from "@repo/community/attachments";
 import { isEdited } from "../../lib/edited";
 import { postHref, profileHref } from "../../lib/routes";
 import { findSpace } from "../../lib/spaces";
-import { deleteOwnPost, updatePost } from "./actions";
+import { deleteOwnPost, setPostPinned, updatePost } from "./actions";
+import { isSavedByMe, useToggleBookmark } from "./use-toggle-bookmark";
 import { useOwnContent } from "./use-own-content";
 import { isLikedByMe, useToggleLike } from "./use-toggle-like";
 
@@ -39,6 +43,12 @@ interface ActivityPostCardProps {
   onChanged?: () => void | Promise<void>;
   /** Tras eliminar su propio post (por defecto, `onChanged`). */
   onDeleted?: () => void | Promise<void>;
+  /** Se muestra como "Destacado" de su espacio. */
+  pinned?: boolean;
+  /** Admin: ofrece destacar / quitar el destacado en el menú. */
+  canPin?: boolean;
+  /** Tras cambiar el destacado (para recargar el feed). */
+  onPinChanged?: () => void | Promise<void>;
 }
 
 // Una vez visto como editado, o con el texto cambiado en pantalla, la marca
@@ -58,8 +68,13 @@ export const ActivityPostCard = ({
   linkToDetail = false,
   onChanged,
   onDeleted = onChanged,
+  pinned = false,
+  canPin = false,
+  onPinChanged,
 }: ActivityPostCardProps) => {
   const toggleLike = useToggleLike();
+  const toggleBookmark = useToggleBookmark();
+  const [pinError, setPinError] = useState<string | null>(null);
   const me = useClientConnectedUser();
   const edited = useEditedLatch(activity);
   const mentions = activity.mentioned_users.map((user) => ({
@@ -79,6 +94,32 @@ export const ActivityPostCard = ({
     onDeleted,
   });
   const isMine = me?.id === activity.user.id;
+
+  const togglePin = async () => {
+    setPinError(null);
+    const result = await setPostPinned(activity.id, !pinned).catch(() => ({
+      ok: false as const,
+      error: "No pudimos cambiar el destacado. Inténtalo de nuevo.",
+    }));
+    if (result.ok) await onPinChanged?.();
+    else setPinError(result.error);
+  };
+  const actions: ItemMenuAction[] = [
+    ...(isMine ? own.actions : []),
+    ...(canPin
+      ? [
+          {
+            label: pinned ? "Quitar destacado" : "Destacar en el espacio",
+            icon: pinned ? (
+              <PushPinIcon fontSize="small" />
+            ) : (
+              <PushPinOutlinedIcon fontSize="small" />
+            ),
+            onClick: () => void togglePin(),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <>
@@ -104,10 +145,18 @@ export const ActivityPostCard = ({
         href={linkToDetail ? postHref(activity.id) : undefined}
         linkComponent={Link}
         edited={edited}
-        menu={isMine ? own.menu : undefined}
+        menu={
+          actions.length > 0 ? (
+            <ItemMenu label="Opciones de la publicación" actions={actions} />
+          ) : undefined
+        }
         editor={isMine ? own.editor : undefined}
+        pinned={pinned}
+        saved={isSavedByMe(activity)}
+        onToggleSave={() => void toggleBookmark(activity)}
       />
       {isMine && own.error && <Alert severity="error">{own.error}</Alert>}
+      {pinError && <Alert severity="error">{pinError}</Alert>}
       {isMine && own.dialog}
     </>
   );

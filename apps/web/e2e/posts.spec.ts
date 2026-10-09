@@ -61,7 +61,7 @@ test("editar y eliminar lo propio", async ({ page, member: _ }) => {
     .click();
   await page.getByRole("menuitem", { name: "Editar" }).click();
   await page.getByLabel("Editar publicación").fill(`${text} (editado)`);
-  await page.getByRole("button", { name: "Guardar" }).click();
+  await page.getByRole("button", { name: "Guardar", exact: true }).click();
   const edited = page.locator("article", { hasText: `${text} (editado)` });
   await expect(edited).toContainText("· editado");
 
@@ -105,7 +105,7 @@ test("lo ajeno no se puede editar", async ({ page, member: _, newMember }) => {
   await own.getByRole("button", { name: "Opciones de la publicación" }).click();
   await page.getByRole("menuitem", { name: "Editar" }).click();
   await page.getByLabel("Editar publicación").fill(`${ownText} editado`);
-  await page.getByRole("button", { name: "Guardar" }).click();
+  await page.getByRole("button", { name: "Guardar", exact: true }).click();
   await expect(own).toContainText("· editado");
 
   // ...y se repite con el post ajeno: el servidor la rechaza.

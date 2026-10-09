@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import Alert from "@mui/material/Alert";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
@@ -34,19 +41,40 @@ interface ActivityFeedProps {
   empty: EmptyCopy;
   /** Espacios donde el usuario puede publicar desde este feed. */
   postableSpaces?: { id: string; name: string }[];
+  /** Admin en un espacio: puede destacar publicaciones. */
+  canPin?: boolean;
 }
+
+// Destacados del feed (solo los espacios tienen). No hay hook del SDK para
+// `pinned_activities`: se lee el estado del feed directamente.
+const usePinnedActivities = (feed: Feed) =>
+  useSyncExternalStore(
+    (onChange) => feed.state.subscribe(onChange),
+    () => feed.state.getLatestValue().pinned_activities,
+    () => undefined,
+  );
 
 const ActivityList = ({
   feed,
   showSpace,
   empty,
+  canPin,
 }: {
   feed: Feed;
   showSpace: boolean;
   empty: EmptyCopy;
+  canPin: boolean;
 }) => {
   const { activities, is_loading, has_next_page, loadNextPage } =
     useFeedActivities(feed);
+  const pinnedActivities = usePinnedActivities(feed);
+  const pinned = useMemo(
+    () =>
+      (pinnedActivities ?? [])
+        .map((pin) => pin.activity)
+        .filter((activity) => !activity.deleted_at),
+    [pinnedActivities],
+  );
   const sentinel = useRef<HTMLDivElement>(null);
 
   // Scroll infinito: carga la siguiente página al acercarse al final.
@@ -73,22 +101,31 @@ const ActivityList = ({
     );
   }
 
+  // Tras editar, eliminar o cambiar el destacado se recarga la primera
+  // página (el tiempo real puede perder el evento si llega al suscribirse).
+  const reload = () =>
+    feed
+      .getOrCreate({ watch: true, limit: PAGE_SIZE })
+      .then(() => {})
+      .catch(() => {});
+  // El destacado también viene en la lista normal: se muestra solo arriba.
+  const pinnedIds = new Set(pinned.map((activity) => activity.id));
+
   return (
     <Stack spacing={2}>
-      {activities.map((activity) => (
+      {[
+        ...pinned,
+        ...activities.filter((activity) => !pinnedIds.has(activity.id)),
+      ].map((activity) => (
         <ActivityPostCard
           key={activity.id}
           activity={activity}
           showSpace={showSpace}
           linkToDetail
-          // Tras editar o eliminar lo propio se recarga la primera página
-          // (el tiempo real puede perder el evento si llega al suscribirse).
-          onChanged={() =>
-            feed
-              .getOrCreate({ watch: true, limit: PAGE_SIZE })
-              .then(() => {})
-              .catch(() => {})
-          }
+          onChanged={reload}
+          pinned={pinnedIds.has(activity.id)}
+          canPin={canPin}
+          onPinChanged={reload}
         />
       ))}
       <Box ref={sentinel} />
@@ -117,6 +154,7 @@ export const ActivityFeed = ({
   header,
   empty,
   postableSpaces = [],
+  canPin = false,
 }: ActivityFeedProps) => {
   const client = useFeedsClient();
   // El SDK empieza con `activities = []` antes de responder; sin este estado
@@ -187,6 +225,7 @@ export const ActivityFeed = ({
             feed={feed}
             showSpace={groupId !== "space"}
             empty={empty}
+            canPin={canPin && groupId === "space"}
           />
         </StreamFeed>
       )}
