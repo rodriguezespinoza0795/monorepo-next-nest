@@ -10,6 +10,7 @@ import { NotificationsMenu } from "./notifications-menu";
 import { SearchButton } from "./search-button";
 import { SuspendedNotice } from "./suspended-notice";
 import { BRAND } from "@repo/community/brand";
+import { listMembers } from "@repo/community/members";
 
 export default async function FeedLayout({ children }: LayoutProps<"/feed">) {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -30,6 +31,12 @@ export default async function FeedLayout({ children }: LayoutProps<"/feed">) {
     );
   }
 
+  // "Nuevos miembros" de la barra lateral. Si Stream falla, la tarjeta solo
+  // muestra el enlace al directorio.
+  const newMembers = await listMembers({ limit: 5 })
+    .then(({ members }) => members)
+    .catch(() => []);
+
   return (
     <FeedsProvider user={user}>
       <SiteHeader
@@ -42,7 +49,9 @@ export default async function FeedLayout({ children }: LayoutProps<"/feed">) {
           </>
         }
       />
-      <FeedShell user={user}>{children}</FeedShell>
+      <FeedShell user={user} newMembers={newMembers}>
+        {children}
+      </FeedShell>
     </FeedsProvider>
   );
 }

@@ -10,15 +10,20 @@ import Divider from "@mui/material/Divider";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import TagIcon from "@mui/icons-material/Tag";
+import type { Member } from "@repo/community/members";
 import { FeedLayout } from "@repo/ui/feed/feed-layout";
+import { NewMembersCard } from "@repo/ui/feed/member-card";
 import { SpaceNav } from "@repo/ui/feed/space-nav";
 import { profileHref } from "../../lib/routes";
 import { SPACES } from "../../lib/spaces";
 
 interface FeedShellProps {
   user: { id: string; name: string; image?: string | null };
+  /** Últimos miembros en unirse (barra lateral). */
+  newMembers: Member[];
   children: ReactNode;
 }
 
@@ -27,6 +32,11 @@ const mainItems = [
     label: "Inicio",
     href: "/feed",
     icon: <HomeOutlinedIcon fontSize="small" />,
+  },
+  {
+    label: "Miembros",
+    href: "/feed/members",
+    icon: <GroupsOutlinedIcon fontSize="small" />,
   },
 ];
 
@@ -61,7 +71,7 @@ const UserBox = ({ user }: Pick<FeedShellProps, "user">) => (
   </Stack>
 );
 
-const CommunityAside = () => (
+const CommunityAside = ({ newMembers }: Pick<FeedShellProps, "newMembers">) => (
   <Stack spacing={2}>
     <Card sx={{ p: 3 }}>
       <Typography variant="h3" gutterBottom>
@@ -72,6 +82,15 @@ const CommunityAside = () => (
         personas del proyecto.
       </Typography>
     </Card>
+    <NewMembersCard
+      members={newMembers.map((member) => ({
+        name: member.name,
+        image: member.image,
+        joinedAt: new Date(member.joinedAt),
+      }))}
+      href="/feed/members"
+      linkComponent={Link}
+    />
     <Card sx={{ p: 3 }}>
       <Typography variant="h3" gutterBottom>
         Próximos eventos
@@ -83,7 +102,7 @@ const CommunityAside = () => (
   </Stack>
 );
 
-export const FeedShell = ({ user, children }: FeedShellProps) => {
+export const FeedShell = ({ user, newMembers, children }: FeedShellProps) => {
   const pathname = usePathname();
 
   const nav = (
@@ -103,7 +122,7 @@ export const FeedShell = ({ user, children }: FeedShellProps) => {
   );
 
   return (
-    <FeedLayout nav={nav} aside={<CommunityAside />}>
+    <FeedLayout nav={nav} aside={<CommunityAside newMembers={newMembers} />}>
       {children}
     </FeedLayout>
   );
