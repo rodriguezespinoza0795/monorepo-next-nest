@@ -20,6 +20,7 @@ import { NewMembersCard } from "@repo/ui/feed/member-card";
 import { SpaceNav } from "@repo/ui/feed/space-nav";
 import { profileHref } from "../../lib/routes";
 import { SPACES } from "../../lib/spaces";
+import { useUnreadSpaces } from "./use-unread-spaces";
 
 interface FeedShellProps {
   user: { id: string; name: string; image?: string | null };
@@ -97,26 +98,22 @@ const CommunityAside = ({ newMembers }: Pick<FeedShellProps, "newMembers">) => (
       href="/feed/members"
       linkComponent={Link}
     />
-    <Card sx={{ p: 3 }}>
-      <Typography variant="h3" gutterBottom>
-        Próximos eventos
-      </Typography>
-      <Typography variant="body2" color="text.secondary">
-        Muy pronto anunciaremos los primeros encuentros.
-      </Typography>
-    </Card>
   </Stack>
 );
 
 export const FeedShell = ({ user, newMembers, children }: FeedShellProps) => {
   const pathname = usePathname();
+  const unread = useUnreadSpaces(pathname);
 
   const nav = (
     <Stack spacing={1}>
       <SpaceNav items={mainItems} activeHref={pathname} linkComponent={Link} />
       <SpaceNav
         title="Espacios"
-        items={spaceItems}
+        items={spaceItems.map((item) => ({
+          ...item,
+          unread: unread.has(item.href.slice("/feed/".length)),
+        }))}
         activeHref={pathname}
         linkComponent={Link}
       />
@@ -128,7 +125,11 @@ export const FeedShell = ({ user, newMembers, children }: FeedShellProps) => {
   );
 
   return (
-    <FeedLayout nav={nav} aside={<CommunityAside newMembers={newMembers} />}>
+    <FeedLayout
+      nav={nav}
+      aside={<CommunityAside newMembers={newMembers} />}
+      unread={unread.size > 0}
+    >
       {children}
     </FeedLayout>
   );

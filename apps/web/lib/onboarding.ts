@@ -1,4 +1,5 @@
 import "server-only";
+import { syncStreamUser } from "@repo/community/users";
 import { SYSTEM_USER_ID, spaceFid, timelineFid } from "./feeds";
 import { getOrCreateOwnedFeed } from "./owned-feed";
 import { SPACES } from "./spaces";
@@ -18,7 +19,7 @@ interface StreamUser {
 // Solo cuando se crea el timeline se une a todos los espacios; después
 // respeta los que el miembro haya abandonado.
 export const onboardStreamUser = async ({ id, name, image }: StreamUser) => {
-  await stream.upsertUsers([{ id, name, image: image ?? undefined }]);
+  await syncStreamUser({ id, name, image });
 
   const [timelineCreated] = await Promise.all([
     getOrCreateOwnedFeed(stream, {

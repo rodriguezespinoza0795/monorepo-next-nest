@@ -3,6 +3,7 @@
 import { useState, type ReactNode } from "react";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import { UnreadDot } from "./unread-dot";
 import Container from "@mui/material/Container";
 import Drawer from "@mui/material/Drawer";
 import IconButton from "@mui/material/IconButton";
@@ -15,13 +16,20 @@ interface FeedLayoutProps {
   nav: ReactNode;
   /** Columna derecha; solo se muestra en pantallas grandes. */
   aside?: ReactNode;
+  /** Hay publicaciones nuevas en algún espacio (punto en el botón móvil). */
+  unread?: boolean;
   children: ReactNode;
 }
 
 const NAV_WIDTH = 240;
 const ASIDE_WIDTH = 300;
 
-export const FeedLayout = ({ nav, aside, children }: FeedLayoutProps) => {
+export const FeedLayout = ({
+  nav,
+  aside,
+  unread = false,
+  children,
+}: FeedLayoutProps) => {
   const [navOpen, setNavOpen] = useState(false);
   const closeNav = () => setNavOpen(false);
 
@@ -61,6 +69,7 @@ export const FeedLayout = ({ nav, aside, children }: FeedLayoutProps) => {
             onClick={() => setNavOpen(true)}
             aria-controls="feed-nav"
             aria-expanded={navOpen}
+            endIcon={unread ? <UnreadDot /> : undefined}
             sx={{ display: { md: "none" }, mb: 2 }}
           >
             Espacios

@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { syncStreamUser } from "@repo/community/users";
 import { stream } from "@repo/community/stream";
 import { findDeletedPost } from "../../lib/community-data";
 import { requireAdmin } from "../../lib/session";
@@ -71,9 +72,7 @@ export async function banUser(userId: string, reason: string) {
   }
   return run("bloquear", async () => {
     // El admin queda como autor del baneo: debe existir como usuario.
-    await stream.upsertUsers([
-      { id: admin.user.streamId, name: admin.user.name },
-    ]);
+    await syncStreamUser({ id: admin.user.streamId, name: admin.user.name });
     await stream.moderation.ban({
       target_user_id: userId,
       banned_by_id: admin.user.streamId,

@@ -6,11 +6,14 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import ListSubheader from "@mui/material/ListSubheader";
+import { UnreadDot } from "./unread-dot";
 
 export interface SpaceNavItem {
   label: string;
   href: string;
   icon?: ReactNode;
+  /** Muestra un punto: hay publicaciones nuevas desde la última visita. */
+  unread?: boolean;
 }
 
 interface SpaceNavProps {
@@ -80,9 +83,15 @@ export const SpaceNav = ({
           <ListItemText
             primary={item.label}
             slotProps={{
-              primary: { sx: { fontWeight: active ? 600 : 500, fontSize: 14 } },
+              primary: {
+                sx: {
+                  fontWeight: active || item.unread ? 600 : 500,
+                  fontSize: 14,
+                },
+              },
             }}
           />
+          {item.unread && <UnreadDot />}
         </ListItemButton>
       );
     })}
