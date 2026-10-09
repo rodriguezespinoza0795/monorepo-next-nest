@@ -7,23 +7,25 @@ import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { BRAND } from "@repo/community/brand";
+import { SiteFooter } from "@repo/ui/site-footer";
 import { SiteHeader } from "@repo/ui/site-header";
 
 const steps = [
   {
-    title: "Conecta tus fuentes",
+    title: "Entra con Google",
     description:
-      "Integra los datos que ya tienes en minutos, sin cambiar tu forma de trabajar.",
+      "Sin contraseñas nuevas: inicias sesión con tu cuenta de Google en un clic.",
   },
   {
-    title: "Recibe señales claras",
+    title: "Únete a los espacios",
     description:
-      "Procesamos la información y la convertimos en avisos fáciles de entender.",
+      "Elige los espacios que te interesan; su actividad llega a tu Inicio.",
   },
   {
-    title: "Actúa a tiempo",
+    title: "Publica y conversa",
     description:
-      "Da seguimiento a cada caso y comparte el contexto con tu equipo.",
+      "Comparte texto e imágenes, comenta, menciona con @ y recibe avisos cuando alguien te responde.",
   },
 ];
 
@@ -38,10 +40,10 @@ export default function Home() {
   return (
     <>
       <SiteHeader
-        brand="getStream"
+        brand={BRAND.name}
         links={[
           { label: "Cómo funciona", href: "#como-funciona" },
-          { label: "Contacto", href: "#contacto" },
+          { label: "Únete", href: "#unete" },
         ]}
         action={{ label: "Acceder", href: "/login" }}
       />
@@ -82,24 +84,24 @@ export default function Home() {
                         bgcolor: "primary.main",
                       }}
                     />
-                    <span>Plataforma en desarrollo • Versión preliminar</span>
+                    <span>Demo • Construida con Stream Activity Feeds</span>
                   </Stack>
                 }
                 sx={{ fontWeight: 500, px: 1, height: 36 }}
               />
 
               <Typography variant="h1">
-                Información clara para decidir mejor
+                Comparte, pregunta y aprende en comunidad
               </Typography>
 
               <Typography variant="subtitle1" sx={{ maxWidth: 560 }}>
-                Reunimos datos dispersos y los convertimos en señales
-                comprensibles para facilitar el análisis, el seguimiento y la
-                respuesta de tu equipo.
+                {BRAND.name} reúne a personas con intereses en común en espacios
+                temáticos. Publica tus avances, haz preguntas y conversa con
+                quienes están en lo mismo que tú.
               </Typography>
 
-              <Button variant="contained" size="large" href="#como-funciona">
-                Empezar ahora →
+              <Button variant="contained" size="large" href="/login">
+                Únete con Google →
               </Button>
             </Stack>
           </Container>
@@ -117,7 +119,7 @@ export default function Home() {
             >
               <Typography variant="h2">Cómo funciona</Typography>
               <Typography variant="subtitle1" sx={{ maxWidth: 560 }}>
-                Tres pasos para pasar de los datos a la acción.
+                Tres pasos para empezar a participar.
               </Typography>
             </Stack>
 
@@ -152,7 +154,7 @@ export default function Home() {
 
         <Box
           component="section"
-          id="contacto"
+          id="unete"
           sx={{ pb: { xs: 10, sm: 14 }, scrollMarginTop: 64 }}
         >
           <Container maxWidth="md">
@@ -165,32 +167,31 @@ export default function Home() {
               }}
             >
               <Typography variant="h2" gutterBottom>
-                Trabajemos juntos
+                Tu lugar en la comunidad
               </Typography>
               <Typography
                 variant="subtitle1"
                 sx={{ maxWidth: 480, mx: "auto", mb: 4 }}
               >
-                Cuéntanos qué necesitas y te ayudamos a ponerlo en marcha.
+                Es gratis. Es una demo: el contenido puede borrarse en cualquier
+                momento, y un equipo de moderación cuida las conversaciones.
               </Typography>
-              <Button variant="contained" size="large" href="#">
-                Contactar
+              <Button variant="contained" size="large" href="/login">
+                Crear mi cuenta
               </Button>
             </Card>
           </Container>
         </Box>
       </Box>
 
-      <Box
-        component="footer"
-        sx={{ borderTop: 1, borderColor: "divider", py: 4 }}
-      >
-        <Container maxWidth="lg">
-          <Typography variant="body2" color="text.secondary">
-            © {new Date().getFullYear()} getStream
-          </Typography>
-        </Container>
-      </Box>
+      <SiteFooter
+        brand={BRAND.name}
+        note={BRAND.demoNote}
+        links={[
+          { label: "Privacidad", href: "/privacy" },
+          { label: "Condiciones", href: "/terms" },
+        ]}
+      />
     </>
   );
 }

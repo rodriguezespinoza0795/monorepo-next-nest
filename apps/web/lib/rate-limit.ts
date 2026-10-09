@@ -33,7 +33,9 @@ export const takeRateLimit = async (kind: RateLimitKind, key: string) => {
   try {
     const { success, reason } = await limiters[kind].limit(key);
     if (reason === "timeout") {
-      console.warn(`[rate-limit] Upstash tardó demasiado (${kind}); se permite`);
+      console.warn(
+        `[rate-limit] Upstash tardó demasiado (${kind}); se permite`,
+      );
     }
     return success;
   } catch (error) {

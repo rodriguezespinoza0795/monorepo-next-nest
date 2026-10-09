@@ -6,8 +6,9 @@ import { auth } from "../../lib/auth";
 import { canPostIn, SPACES } from "../../lib/spaces";
 import { FeedHeader } from "@repo/ui/feed/feed-header";
 import { ActivityFeed } from "./activity-feed";
+import { BRAND } from "@repo/community/brand";
 
-export const metadata: Metadata = { title: "Comunidad · getStream" };
+export const metadata: Metadata = { title: `Comunidad · ${BRAND.name}` };
 
 export default async function FeedPage() {
   const session = await auth.api.getSession({ headers: await headers() });

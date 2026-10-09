@@ -30,7 +30,7 @@ Las brechas citadas son las de [`reglas-de-negocio.md`](reglas-de-negocio.md#10-
 
 ## Decisiones pendientes (resolver al empezar)
 
-1. **Hosting:** ¿Vercel u otro?
+1. ~~**Hosting.**~~ Vercel, con subdominios en inglés (`community.` y `admin.`) del dominio en Cloudflare; app de Stream y base de Upstash propias para producción; Sentry después, en un PR aparte.
 2. **Límite de frecuencia compartido:** ¿Upstash Redis (plan gratis) o dejarlo por proceso y documentarlo?
 3. ~~**App de Stream de pruebas.**~~ Creada; sus credenciales van en `apps/web/.env.test.local` y en los secrets del repo para el workflow E2E.
 4. **Orden:** recomendado empezar por la Fase A (PR 1 → 4) y luego la Fase B.

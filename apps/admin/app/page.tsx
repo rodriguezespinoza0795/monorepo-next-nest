@@ -7,7 +7,9 @@ import Container from "@mui/material/Container";
 import Grid from "@mui/material/Grid";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import { SiteFooter } from "@repo/ui/site-footer";
 import { SiteHeader } from "@repo/ui/site-header";
+import { ADMIN_BRAND } from "@repo/community/brand";
 
 const sections = [
   {
@@ -33,7 +35,7 @@ export default function Home() {
   return (
     <>
       <SiteHeader
-        brand="getStream Admin"
+        brand={ADMIN_BRAND}
         action={{ label: "Acceder", href: "/login" }}
       />
 
@@ -105,6 +107,7 @@ export default function Home() {
           </Grid>
         </Container>
       </Box>
+      <SiteFooter brand={ADMIN_BRAND} />
     </>
   );
 }

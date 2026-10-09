@@ -57,6 +57,10 @@ Playwright compila y levanta su propio servidor de `web` en el puerto 3100 (carp
 
 En GitHub se corren bajo demanda desde **Actions → E2E → Run workflow** (`.github/workflows/e2e.yml`), con los secrets `STREAM_TEST_API_KEY`, `STREAM_TEST_API_SECRET` y, opcionalmente, `UPSTASH_REDIS_REST_URL` y `UPSTASH_REDIS_REST_TOKEN`.
 
+## Despliegue
+
+`web` y `admin` se despliegan en Vercel, cada una como proyecto propio, con servicios de producción separados (Stream, Upstash). Guía paso a paso en [`docs/despliegue.md`](docs/despliegue.md).
+
 ### Validación en móvil
 
 Todo cambio visual se valida también en móvil (ver `CLAUDE.md`):

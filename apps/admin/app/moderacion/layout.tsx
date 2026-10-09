@@ -8,8 +8,9 @@ import { EmptyState } from "@repo/ui/feed/empty-state";
 import { SiteHeader } from "@repo/ui/site-header";
 import { getAdminSession } from "../../lib/session";
 import { SignOutButton } from "./sign-out-button";
+import { ADMIN_BRAND } from "@repo/community/brand";
 
-export const metadata: Metadata = { title: "Moderación · getStream Admin" };
+export const metadata: Metadata = { title: `Moderación · ${ADMIN_BRAND}` };
 
 export default async function ModerationLayout({
   children,
@@ -19,7 +20,7 @@ export default async function ModerationLayout({
   return (
     <>
       <SiteHeader
-        brand="getStream Admin"
+        brand={ADMIN_BRAND}
         links={
           admin
             ? [
