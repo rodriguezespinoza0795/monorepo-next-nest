@@ -53,6 +53,7 @@ Un administrador también es miembro, y cualquier miembro es autor de lo que cre
 | Responder un comentario (1 nivel de hilo)                      | ❌        | ✅                                                     | —                                                                         | ✅                                              | Server action `addComment`                                                    |
 | Mencionar a un miembro con `@Nombre` (post o comentario)       | ❌        | ✅                                                     | —                                                                         | ✅                                              | Autocompletado + validación en `createPost` / `addComment`                    |
 | Poner enlaces (URL suelta o "Insertar enlace" con texto)       | ❌        | ✅                                                     | —                                                                         | ✅                                              | Texto `[texto](https://…)`; se dibuja en `packages/ui/src/feed/rich-text.tsx` |
+| Buscar publicaciones y miembros                                | ❌        | ✅ Lupa del encabezado → `/feed/search`                | —                                                                         | ✅                                              | Página de servidor `app/feed/search` (`lib/search.ts`)                        |
 | Cerrar sesión / ir a su perfil                                 | —         | ✅ Menú del avatar en el encabezado (también en móvil) | —                                                                         | ✅ (en `admin`, solo cerrar sesión)             | `account-menu.tsx` de cada app                                                |
 | Ver y marcar sus notificaciones como leídas                    | ❌        | ✅                                                     | —                                                                         | ✅                                              | SDK de Stream (feed `notification:<streamId>`)                                |
 | Editar su post (texto y menciones)                             | —         | —                                                      | ✅ Menú "⋯" → Editar; queda "· editado" (marca propia `custom.edited_at`) | —                                               | Server action `updatePost`                                                    |
@@ -141,6 +142,8 @@ Un administrador también es miembro, y cualquier miembro es autor de lo que cre
 | Menciones en un post                | Máx. 10, solo miembros que existen, sin uno mismo                                                                   | `createPost`                                                                          |
 | Menciones en un comentario          | Máx. 10, solo miembros que existen, sin uno mismo                                                                   | `addComment`                                                                          |
 | Frecuencia de comentarios           | 20 cada 10 min por miembro (respuestas incluidas)                                                                   | `addComment` (Upstash)                                                                |
+| Frecuencia de búsquedas             | 30 por minuto por miembro                                                                                           | `/feed/search` (Upstash)                                                              |
+| Búsqueda                            | 2–100 caracteres, máx. 5 palabras; cada palabra como prefijo, sin acentos; 20 resultados por página                 | `lib/search.ts`                                                                       |
 | Frecuencia de likes                 | Sin límite propio; uno por persona y post                                                                           | Stream (`enforce_unique`); 1000 req/min globales                                      |
 | "Me gusta" por persona y post       | 1                                                                                                                   | Stream (`enforce_unique`)                                                             |
 | "Me gusta" por persona y comentario | 1                                                                                                                   | Stream (`enforce_unique`)                                                             |
@@ -170,6 +173,12 @@ Reglas que hoy dependen solo de la interfaz o que Stream no hace cumplir como qu
 - Solo las imágenes **subidas** por el autor se muestran como foto del post (`isUploadedImage`): si un sitio no tiene `og:image`, Stream guarda su favicon como `type: "image"`, y antes se veía en grande.
 - Cuando el texto tiene una URL, Stream genera la vista previa en segundo plano y **marca su propio `edited_at`**. Por eso "· editado" usa una marca propia (`custom.edited_at`) que solo ponen `updatePost` y `updateComment`. Las ediciones anteriores a este cambio ya no muestran la marca.
 
+### Búsqueda
+
+- Se busca por el **servidor** (con el secreto), para decidir qué se puede encontrar: solo publicaciones de los espacios (`type: "post"`), nunca las eliminadas (borrado suave) ni las de miembros bloqueados. Entre los miembros no aparecen el usuario `system` ni los bloqueados.
+- Stream `$autocomplete` con varias palabras solo trata la última como prefijo; por eso se envía un filtro por palabra unido con `$and`: todas deben aparecer, en cualquier orden ("noct fotog" encuentra "fotografía nocturna").
+- Los comentarios **no** se buscan por ahora.
+
 ## 11. Dónde vive cada regla en el código
 
 | Regla                                         | Archivo                                                                                                                          |
@@ -185,6 +194,7 @@ Reglas que hoy dependen solo de la interfaz o que Stream no hace cumplir como qu
 | Dueño de perfiles y timelines                 | `apps/web/lib/owned-feed.ts` (`getOrCreateOwnedFeed`)                                                                            |
 | Unirse / salir de un espacio                  | `apps/web/app/feed/space-membership-button.tsx`                                                                                  |
 | Notificaciones (campana y textos)             | `apps/web/app/feed/notifications-menu.tsx`                                                                                       |
+| Búsqueda                                      | `apps/web/lib/search.ts`, `apps/web/app/feed/search/`, `packages/ui/src/feed/search-results.tsx`                                 |
 | Enlaces, tarjetas de enlace y "· editado"     | `packages/ui/src/feed/rich-text.tsx`, `link-preview-card.tsx`, `packages/community/src/attachments.ts`, `apps/web/lib/edited.ts` |
 | Menciones (autocompletado)                    | `apps/web/app/feed/use-mentions.ts`                                                                                              |
 | Panel de moderación y sus acciones            | `apps/admin/app/moderacion/` (`actions.ts`), `apps/admin/lib/session.ts`                                                         |
