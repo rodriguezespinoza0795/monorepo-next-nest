@@ -7,9 +7,13 @@ import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
+import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import FavoriteIcon from "@mui/icons-material/Favorite";
+import PushPinIcon from "@mui/icons-material/PushPin";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import { LinkPreviews, type LinkPreview } from "./link-preview-card";
 import { RichText, type Mention } from "./rich-text";
@@ -45,6 +49,11 @@ export interface PostCardProps {
   menu?: ReactNode;
   /** Si está, reemplaza el texto (edición en el lugar). */
   editor?: ReactNode;
+  /** Publicación destacada (fijada arriba de su espacio). */
+  pinned?: boolean;
+  /** "Guardar" (si no hay `onToggleSave`, no se muestra). */
+  saved?: boolean;
+  onToggleSave?: () => void;
 }
 
 const LIKE_COLOR = "#F472B6";
@@ -74,8 +83,33 @@ export const PostCard = ({
   edited = false,
   menu,
   editor,
+  pinned = false,
+  saved = false,
+  onToggleSave,
 }: PostCardProps) => (
-  <Card component="article" sx={{ p: { xs: 2.5, sm: 3 } }}>
+  <Card
+    component="article"
+    sx={{
+      p: { xs: 2.5, sm: 3 },
+      ...(pinned && { borderColor: "rgba(99,102,241,.45)" }),
+    }}
+  >
+    {pinned && (
+      <Stack
+        direction="row"
+        spacing={0.75}
+        sx={{
+          alignItems: "center",
+          mb: 1.5,
+          color: "primary.light",
+          fontSize: 13,
+          fontWeight: 600,
+        }}
+      >
+        <PushPinIcon sx={{ fontSize: 16 }} />
+        <span>Destacado</span>
+      </Stack>
+    )}
     <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", mb: 2 }}>
       <Avatar src={author.image} alt={author.name}>
         {author.name.charAt(0)}
@@ -219,6 +253,23 @@ export const PostCard = ({
             {commentCount}
           </Typography>
         </Stack>
+      )}
+      {onToggleSave && (
+        <Tooltip title={saved ? "Quitar de guardados" : "Guardar"}>
+          <Button
+            size="small"
+            onClick={onToggleSave}
+            aria-pressed={saved}
+            aria-label="Guardar publicación"
+            sx={{
+              ...actionSx,
+              ml: "auto !important",
+              ...(saved && { color: "primary.light" }),
+            }}
+          >
+            {saved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+          </Button>
+        </Tooltip>
       )}
     </Stack>
   </Card>

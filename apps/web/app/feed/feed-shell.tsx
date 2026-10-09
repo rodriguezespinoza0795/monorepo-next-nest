@@ -10,6 +10,7 @@ import Divider from "@mui/material/Divider";
 import MuiLink from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
+import BookmarkBorderIcon from "@mui/icons-material/BookmarkBorder";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import TagIcon from "@mui/icons-material/Tag";
@@ -37,6 +38,11 @@ const mainItems = [
     label: "Miembros",
     href: "/feed/members",
     icon: <GroupsOutlinedIcon fontSize="small" />,
+  },
+  {
+    label: "Guardados",
+    href: "/feed/saved",
+    icon: <BookmarkBorderIcon fontSize="small" />,
   },
 ];
 

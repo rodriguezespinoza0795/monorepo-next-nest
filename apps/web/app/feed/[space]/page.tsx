@@ -24,7 +24,8 @@ export default async function SpacePage({
 
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) redirect("/login");
-  const canPost = canPostIn(space, isAdmin(session.user.email));
+  const admin = isAdmin(session.user.email);
+  const canPost = canPostIn(space, admin);
 
   return (
     <ActivityFeed
@@ -42,6 +43,7 @@ export default async function SpacePage({
         description: "Cuando alguien publique en este espacio, lo verás aquí.",
       }}
       postableSpaces={canPost ? [{ id: space.id, name: space.name }] : []}
+      canPin={admin}
     />
   );
 }

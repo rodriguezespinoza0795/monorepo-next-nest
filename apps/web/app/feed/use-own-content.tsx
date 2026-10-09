@@ -5,7 +5,7 @@ import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import { ConfirmDialog } from "@repo/ui/confirm-dialog";
 import { InlineEditor } from "@repo/ui/feed/inline-editor";
-import { ItemMenu } from "@repo/ui/feed/item-menu";
+import { ItemMenu, type ItemMenuAction } from "@repo/ui/feed/item-menu";
 import type { MentionUser } from "@repo/ui/feed/mention-text-field";
 import type { ActionResult } from "./actions";
 import { useMentions } from "./use-mentions";
@@ -80,7 +80,23 @@ export const useOwnContent = ({
     else setError(result.error);
   };
 
+  const actions: ItemMenuAction[] = [
+    {
+      label: "Editar",
+      icon: <EditOutlinedIcon fontSize="small" />,
+      onClick: startEditing,
+    },
+    {
+      label: "Eliminar",
+      icon: <DeleteOutlineOutlinedIcon fontSize="small" />,
+      onClick: () => setConfirming(true),
+      destructive: true,
+    },
+  ];
+
   return {
+    /** Editar y Eliminar, para combinarlas con otras en un mismo menú. */
+    actions,
     menu: (
       <ItemMenu
         label={
@@ -88,19 +104,7 @@ export const useOwnContent = ({
             ? "Opciones de la publicación"
             : "Opciones del comentario"
         }
-        actions={[
-          {
-            label: "Editar",
-            icon: <EditOutlinedIcon fontSize="small" />,
-            onClick: startEditing,
-          },
-          {
-            label: "Eliminar",
-            icon: <DeleteOutlineOutlinedIcon fontSize="small" />,
-            onClick: () => setConfirming(true),
-            destructive: true,
-          },
-        ]}
+        actions={actions}
       />
     ),
     editor: editing ? (

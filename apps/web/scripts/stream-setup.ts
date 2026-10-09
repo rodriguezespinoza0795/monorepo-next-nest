@@ -59,9 +59,9 @@ await client.feeds.getOrCreateFeedGroup({
 });
 console.log("✓ feed group `profile`");
 
-// Comentar, editar y borrar entran solo por server actions (`addComment`,
-// `updatePost`, `deleteOwnPost`, …), que validan largo, menciones, autoría,
-// bloqueo y frecuencia. Se quitan estos permisos a los roles de miembro en la
+// Comentar, editar, borrar y destacar entran solo por server actions
+// (`addComment`, `updatePost`, `deleteOwnPost`, `setPostPinned`, …), que
+// validan largo, menciones, autoría, rol, bloqueo y frecuencia. Se quitan estos permisos a los roles de miembro en la
 // visibilidad `visible` (espacios, perfiles, timelines) para que nadie los
 // use directo con su token. Admins y moderadores de Stream los conservan; el
 // SDK de servidor no pasa por estos permisos.
@@ -72,6 +72,8 @@ const SERVER_ONLY_PERMISSIONS = [
   "delete-activities-owner",
   "update-comment-owner",
   "delete-comment-owner",
+  // Destacar: solo admins, por `setPostPinned`.
+  "pin-activity-owner",
 ];
 const { feed_visibility } = await client.feeds.getFeedVisibility({
   name: SPACE_VISIBILITY,
@@ -87,7 +89,7 @@ const grants = Object.fromEntries(
   ]),
 );
 await client.feeds.updateFeedVisibility({ name: SPACE_VISIBILITY, grants });
-console.log("✓ comentar, editar y borrar solo por el servidor");
+console.log("✓ comentar, editar, borrar y destacar solo por el servidor");
 
 // Perfiles de los miembros que ya existen (los nuevos los crea el onboarding),
 // para que nadie se adelante a crearlos y quede como dueño.
