@@ -4,7 +4,8 @@ import { Redis } from "@upstash/redis";
 
 // Límite de frecuencia compartido por todas las instancias del servidor
 // (Upstash Redis, ventana deslizante). Protege el tope mensual de
-// publicaciones del plan gratuito de Stream y evita el spam de comentarios.
+// publicaciones del plan gratuito de Stream, evita el spam de comentarios y
+// el abuso de la búsqueda.
 // Ver docs/reglas-de-negocio.md.
 const redis = Redis.fromEnv();
 
@@ -19,6 +20,13 @@ const limiters = {
     redis,
     limiter: Ratelimit.slidingWindow(20, "10 m"),
     prefix: "rl:comment",
+    timeout: 2000,
+  }),
+  // Cada búsqueda son 2 consultas a Stream (posts y miembros).
+  search: new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(30, "1 m"),
+    prefix: "rl:search",
     timeout: 2000,
   }),
 };

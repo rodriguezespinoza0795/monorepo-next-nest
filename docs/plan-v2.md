@@ -1,6 +1,6 @@
 # Plan v2 — Comunidad
 
-Estado: **en curso** (empezado el 2026-10-08). Hecho: PR 1 (validaciones y límites), PR 2 (editar y borrar lo propio) y PR 3 (pruebas automáticas y CI, rama `feat/v2-tests-ci`). Decisiones tomadas: Upstash Redis para el límite compartido; Fase A primero. El plan v1 (6 PRs: login, feed, publicar e interactuar, espacios y perfil, notificaciones y moderación) está completo.
+Estado: **en curso** (empezado el 2026-10-08). **Fase A completa**: PR 1 (validaciones y límites), PR 2 (editar y borrar lo propio), PR 3 (pruebas automáticas y CI) y PR 4 (despliegue en Vercel: `community.davidre.dev` y `admin.davidre.dev`; Sentry queda para después). Extra: PR de mejoras por feedback de usuarios (menú de cuenta, likes en comentarios, enlaces y tarjetas de enlace). **Fase B en curso:** PR 5 (búsqueda, rama `feat/v2-search`). Decisiones tomadas: Upstash Redis para el límite compartido; Fase A primero. El plan v1 (6 PRs: login, feed, publicar e interactuar, espacios y perfil, notificaciones y moderación) está completo.
 
 Objetivo: dejar la comunidad lista para producción y acercarla más a Circle, manteniendo la arquitectura actual: Stream Activity Feeds v3 en el plan gratuito, Better Auth sin base de datos y sin servidores propios. Primero la calidad, después las funciones.
 
@@ -17,23 +17,23 @@ Las brechas citadas son las de [`reglas-de-negocio.md`](reglas-de-negocio.md#10-
 
 ## Fase B — Funciones tipo Circle
 
-| PR                            | Contenido                                                                                                                                                | Cómo (sin base de datos)                                                                                  |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| **5. Búsqueda**               | Buscar publicaciones y miembros desde el encabezado.                                                                                                     | `queryActivities` con filtro de texto (`$q`, ya probado en servidor) y `queryUsers`.                      |
-| **6. Directorio de miembros** | Página `/feed/miembros` y la columna "Miembros" real en la barra derecha.                                                                                | `queryUsers`.                                                                                             |
-| **7. Posts fijados**          | El admin fija un post arriba de un espacio ("Destacado").                                                                                                | `pinActivity` de Stream.                                                                                  |
-| **8. Guardados**              | "Guardar" en cada post y página `/feed/guardados`.                                                                                                       | Bookmarks de Stream.                                                                                      |
-| **9. Eventos**                | Espacio de eventos: el admin crea eventos (título, fecha, lugar o enlace), los miembros confirman asistencia; la barra "Próximos eventos" se llena sola. | El evento es una actividad con campos propios; "Asistiré" es una reacción. Cada evento gasta 1 actividad. |
-| **10. Reportes de miembros**  | Botón "Reportar" en posts y comentarios, con una cola de reportes en el panel de `admin`. UI para restaurar comentarios eliminados.                      | API de moderación de Stream (flags); `restoreComment`.                                                    |
+| PR                            | Contenido                                                                                                                                                | Cómo (sin base de datos)                                                                                                 |
+| ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **5. Búsqueda**               | Buscar publicaciones y miembros desde el encabezado.                                                                                                     | `queryActivities` y `queryUsers` con `$autocomplete` por palabra (`$and`), por el servidor. Comentarios fuera por ahora. |
+| **6. Directorio de miembros** | Página `/feed/miembros` y la columna "Miembros" real en la barra derecha.                                                                                | `queryUsers`.                                                                                                            |
+| **7. Posts fijados**          | El admin fija un post arriba de un espacio ("Destacado").                                                                                                | `pinActivity` de Stream.                                                                                                 |
+| **8. Guardados**              | "Guardar" en cada post y página `/feed/guardados`.                                                                                                       | Bookmarks de Stream.                                                                                                     |
+| **9. Eventos**                | Espacio de eventos: el admin crea eventos (título, fecha, lugar o enlace), los miembros confirman asistencia; la barra "Próximos eventos" se llena sola. | El evento es una actividad con campos propios; "Asistiré" es una reacción. Cada evento gasta 1 actividad.                |
+| **10. Reportes de miembros**  | Botón "Reportar" en posts y comentarios, con una cola de reportes en el panel de `admin`. UI para restaurar comentarios eliminados.                      | API de moderación de Stream (flags); `restoreComment`.                                                                   |
 
 **Fuera del v2 (candidatos para un v3):** mensajes directos (es otro producto de Stream, Chat, con su propio plan y límites), encuestas y texto enriquecido con Tiptap.
 
 ## Decisiones pendientes (resolver al empezar)
 
 1. ~~**Hosting.**~~ Vercel, con subdominios en inglés (`community.` y `admin.`) del dominio en Cloudflare; app de Stream y base de Upstash propias para producción; Sentry después, en un PR aparte.
-2. **Límite de frecuencia compartido:** ¿Upstash Redis (plan gratis) o dejarlo por proceso y documentarlo?
+2. ~~**Límite de frecuencia compartido.**~~ Upstash Redis (plan gratis).
 3. ~~**App de Stream de pruebas.**~~ Creada; sus credenciales van en `apps/web/.env.test.local` y en los secrets del repo para el workflow E2E.
-4. **Orden:** recomendado empezar por la Fase A (PR 1 → 4) y luego la Fase B.
+4. ~~**Orden.**~~ Fase A (PR 1 → 4) terminada; Fase B empezando por la búsqueda.
 
 ## Cosas a tener en cuenta (aprendidas en el v1)
 

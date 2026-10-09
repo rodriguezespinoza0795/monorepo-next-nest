@@ -7,6 +7,7 @@ import { FeedShell } from "./feed-shell";
 import { FeedsProvider } from "./feeds-provider";
 import { AccountMenu } from "./account-menu";
 import { NotificationsMenu } from "./notifications-menu";
+import { SearchButton } from "./search-button";
 import { SuspendedNotice } from "./suspended-notice";
 import { BRAND } from "@repo/community/brand";
 
@@ -35,6 +36,7 @@ export default async function FeedLayout({ children }: LayoutProps<"/feed">) {
         brand={BRAND.name}
         extra={
           <>
+            <SearchButton />
             <NotificationsMenu />
             <AccountMenu user={{ ...user, email: session.user.email }} />
           </>
