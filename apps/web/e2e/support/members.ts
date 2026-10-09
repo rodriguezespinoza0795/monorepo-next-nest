@@ -99,10 +99,14 @@ export const loginAs = async (context: BrowserContext, member: Member) => {
 };
 
 /** Publica como `member` directamente en Stream (sin pasar por la UI). */
-export const postAs = async (member: Member, text: string) => {
+export const postAs = async (
+  member: Member,
+  text: string,
+  space = "general",
+) => {
   const { activity } = await stream.feeds.addActivity({
     type: "post",
-    feeds: ["space:general", `profile:${member.id}`],
+    feeds: [`space:${space}`, `profile:${member.id}`],
     user_id: member.id,
     text,
   });

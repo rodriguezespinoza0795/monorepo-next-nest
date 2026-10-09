@@ -1,5 +1,6 @@
 import { headers } from "next/headers";
 import { auth } from "../../../../lib/auth";
+import { syncStreamUser } from "@repo/community/users";
 import { stream } from "../../../../lib/stream";
 
 const TOKEN_VALIDITY_SECONDS = 60 * 60;
@@ -12,11 +13,9 @@ export async function GET() {
   }
 
   const { streamId, name, image } = session.user;
-  const { users } = await stream.upsertUsers([
-    { id: streamId, name, image: image ?? undefined },
-  ]);
+  const user = await syncStreamUser({ id: streamId, name, image });
   // Bloqueado desde moderación: sin token no se conecta a Stream.
-  if (users[streamId]?.banned) {
+  if (user?.banned) {
     return Response.json({ error: "Cuenta suspendida" }, { status: 403 });
   }
 
