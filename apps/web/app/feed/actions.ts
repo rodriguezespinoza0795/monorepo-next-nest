@@ -2,7 +2,9 @@
 
 import { headers } from "next/headers";
 import { isAdmin } from "../../lib/admins";
+import { isUploadedImage } from "@repo/community/attachments";
 import { auth } from "../../lib/auth";
+import { EDITED_AT } from "../../lib/edited";
 import { profileFid, spaceFid } from "../../lib/feeds";
 import { isBanned } from "../../lib/membership";
 import { isStreamIdList, validMentions } from "../../lib/mentions";
@@ -250,7 +252,8 @@ export async function updatePost(input: {
   }
 
   const text = input.text.trim();
-  if (!text && activity.attachments.length === 0) {
+  // La vista previa de un enlace no cuenta: sin texto, desaparecería.
+  if (!text && !activity.attachments.some(isUploadedImage)) {
     return fail("La publicación no puede quedar vacía.");
   }
   if (text.length > MAX_TEXT_LENGTH) {
@@ -265,7 +268,13 @@ export async function updatePost(input: {
     await stream.feeds.updateActivityPartial({
       id: activity.id,
       user_id: streamId,
-      set: { text, mentioned_user_ids: mentionedUserIds },
+      // Marca propia de edición: Stream también pone `edited_at` al generar la
+      // vista previa de un enlace, así que no sirve para "· editado".
+      set: {
+        text,
+        mentioned_user_ids: mentionedUserIds,
+        [`custom.${EDITED_AT}`]: new Date().toISOString(),
+      },
       // Avisa solo a quien se menciona por primera vez al editar.
       handle_mention_notifications: true,
     });
@@ -338,6 +347,8 @@ export async function updateComment(input: {
       user_id: streamId,
       comment: text,
       mentioned_user_ids: mentionedUserIds,
+      // Ver `updatePost`: marca propia de edición.
+      custom: { ...comment.custom, [EDITED_AT]: new Date().toISOString() },
       handle_mention_notifications: true,
     });
     return { ok: true };

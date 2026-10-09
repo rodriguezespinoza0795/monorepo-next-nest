@@ -14,6 +14,7 @@ import {
   NotificationList,
   type NotificationItem,
 } from "@repo/ui/feed/notification-list";
+import { plainText } from "@repo/ui/feed/rich-text";
 import { postHref } from "../../lib/routes";
 import { RequireFeedsClient } from "./require-feeds-client";
 
@@ -32,6 +33,10 @@ const ACTIONS: Record<string, [singular: string, plural: string]> = {
   reaction: ["reaccionó a tu publicación", "reaccionaron a tu publicación"],
   comment: ["comentó tu publicación", "comentaron tu publicación"],
   comment_reply: ["respondió a tu comentario", "respondieron a tu comentario"],
+  comment_reaction: [
+    "reaccionó a tu comentario",
+    "reaccionaron a tu comentario",
+  ],
   mention: [
     "te mencionó en una publicación",
     "te mencionaron en una publicación",
@@ -42,8 +47,13 @@ const ACTIONS: Record<string, [singular: string, plural: string]> = {
   ],
 };
 
-const truncate = (text: string) =>
-  text.length > EXCERPT_LENGTH ? `${text.slice(0, EXCERPT_LENGTH)}…` : text;
+// Extracto en texto plano: `[texto](url)` se muestra como `texto`.
+const truncate = (raw: string) => {
+  const text = plainText(raw);
+  return text.length > EXCERPT_LENGTH
+    ? `${text.slice(0, EXCERPT_LENGTH)}…`
+    : text;
+};
 
 const toItem = (group: AggregatedActivityResponse): NotificationItem | null => {
   const latest = group.activities[0];

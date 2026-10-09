@@ -25,7 +25,8 @@ interface NavLink {
 interface SiteHeaderProps {
   brand: string;
   links?: NavLink[];
-  action: NavLink;
+  /** Botón principal (por ejemplo "Acceder"); se omite con sesión iniciada. */
+  action?: NavLink;
   /** Controles extra junto al botón de acción (por ejemplo, notificaciones). */
   extra?: ReactNode;
 }
@@ -81,7 +82,7 @@ export const SiteHeader = ({
 
           <Stack
             direction="row"
-            spacing={3}
+            spacing={{ xs: 1.5, sm: 3 }}
             sx={{ ml: "auto", alignItems: "center" }}
           >
             {links.map((link) => (
@@ -101,9 +102,11 @@ export const SiteHeader = ({
               </Link>
             ))}
             {extra}
-            <Button variant="outlined" size="small" href={action.href}>
-              {action.label}
-            </Button>
+            {action && (
+              <Button variant="outlined" size="small" href={action.href}>
+                {action.label}
+              </Button>
+            )}
             {links.length > 0 && (
               <IconButton
                 aria-label="Abrir menú"

@@ -5,7 +5,12 @@ import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import CircularProgress from "@mui/material/CircularProgress";
 import Stack from "@mui/material/Stack";
+import { InsertLinkButton } from "./insert-link-button";
 import { MentionTextField, type MentionUser } from "./mention-text-field";
+
+// Agrega el enlace al final del texto (con un espacio de separación).
+const appendLink = (value: string, markdown: string) =>
+  value.trim() ? `${value.trimEnd()} ${markdown} ` : `${markdown} `;
 
 interface CommentComposerProps {
   user: { name: string; image?: string };
@@ -78,11 +83,16 @@ export const CommentComposer = ({
           disabled={submitting}
           slotProps={{ htmlInput: { maxLength, "aria-label": placeholder } }}
         />
-        {(!empty || onCancel) && (
+        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+          <InsertLinkButton
+            size="small"
+            onInsert={(markdown) => onChange(appendLink(value, markdown))}
+            disabled={submitting}
+          />
           <Stack
             direction="row"
             spacing={1}
-            sx={{ justifyContent: "flex-end" }}
+            sx={{ justifyContent: "flex-end", ml: "auto !important" }}
           >
             {onCancel && (
               <Button size="small" onClick={onCancel} disabled={submitting}>
@@ -103,7 +113,7 @@ export const CommentComposer = ({
               {submitLabel}
             </Button>
           </Stack>
-        )}
+        </Stack>
       </Stack>
     </Stack>
   );

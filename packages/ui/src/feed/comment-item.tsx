@@ -4,10 +4,13 @@ import type { ElementType, ReactNode } from "react";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
+import FavoriteIcon from "@mui/icons-material/Favorite";
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
 import Link from "@mui/material/Link";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import { MentionText, type Mention } from "./mention-text";
+import { LinkPreviews, type LinkPreview } from "./link-preview-card";
+import { RichText, type Mention } from "./rich-text";
 import { RelativeTime } from "./relative-time";
 
 interface CommentItemProps {
@@ -29,6 +32,12 @@ interface CommentItemProps {
   menu?: ReactNode;
   /** Si está, reemplaza la burbuja del comentario (edición en el lugar). */
   editor?: ReactNode;
+  /** "Me gusta" del comentario (si no hay `onToggleLike`, no se muestra). */
+  /** Tarjetas de los enlaces del texto (versión compacta). */
+  linkPreviews?: LinkPreview[];
+  likeCount?: number;
+  liked?: boolean;
+  onToggleLike?: () => void;
 }
 
 export const CommentItem = ({
@@ -43,6 +52,10 @@ export const CommentItem = ({
   edited = false,
   menu,
   editor,
+  linkPreviews = [],
+  likeCount = 0,
+  liked = false,
+  onToggleLike,
 }: CommentItemProps) => (
   <Stack direction="row" spacing={1.5} sx={{ alignItems: "flex-start" }}>
     <Avatar src={author.image} alt={author.name} sx={{ width: 32, height: 32 }}>
@@ -105,22 +118,49 @@ export const CommentItem = ({
           {deleted ? (
             "Comentario eliminado"
           ) : (
-            <MentionText
+            <RichText
               text={text ?? ""}
               mentions={mentions}
               linkComponent={linkComponent}
             />
           )}
         </Typography>
+        {!deleted && <LinkPreviews previews={linkPreviews} compact />}
       </Box>
-      {onReply && !deleted && !editor && (
-        <Button
-          size="small"
-          onClick={onReply}
-          sx={{ mt: 0.25, minWidth: 0, color: "text.secondary", fontSize: 13 }}
-        >
-          Responder
-        </Button>
+      {!deleted && !editor && (onToggleLike || onReply) && (
+        <Stack direction="row" spacing={0.5} sx={{ mt: 0.25 }}>
+          {onToggleLike && (
+            <Button
+              size="small"
+              onClick={onToggleLike}
+              aria-pressed={liked}
+              aria-label={`Me gusta el comentario (${likeCount})`}
+              startIcon={
+                liked ? (
+                  <FavoriteIcon sx={{ fontSize: "16px !important" }} />
+                ) : (
+                  <FavoriteBorderIcon sx={{ fontSize: "16px !important" }} />
+                )
+              }
+              sx={{
+                minWidth: 0,
+                fontSize: 13,
+                color: liked ? "#F472B6" : "text.secondary",
+              }}
+            >
+              {likeCount > 0 ? likeCount : "Me gusta"}
+            </Button>
+          )}
+          {onReply && (
+            <Button
+              size="small"
+              onClick={onReply}
+              sx={{ minWidth: 0, color: "text.secondary", fontSize: 13 }}
+            >
+              Responder
+            </Button>
+          )}
+        </Stack>
       )}
       {children && (
         <Stack spacing={1.5} sx={{ mt: 1 }}>

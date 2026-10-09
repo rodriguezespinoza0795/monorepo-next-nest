@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import Avatar from "@mui/material/Avatar";
 import Container from "@mui/material/Container";
-import Stack from "@mui/material/Stack";
-import Typography from "@mui/material/Typography";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { EmptyState } from "@repo/ui/feed/empty-state";
 import { SiteHeader } from "@repo/ui/site-header";
 import { getAdminSession } from "../../lib/session";
-import { SignOutButton } from "./sign-out-button";
+import { AccountMenu } from "./account-menu";
 import { ADMIN_BRAND } from "@repo/community/brand";
 
 export const metadata: Metadata = { title: `Moderación · ${ADMIN_BRAND}` };
@@ -30,26 +27,9 @@ export default async function ModerationLayout({
               ]
             : []
         }
-        action={{ label: "Inicio", href: "/" }}
+        extra={<AccountMenu user={user} />}
       />
       <Container maxWidth="md" sx={{ pt: { xs: 10, sm: 12 }, pb: 8 }}>
-        <Stack
-          direction="row"
-          spacing={1.5}
-          sx={{ alignItems: "center", justifyContent: "flex-end", mb: 3 }}
-        >
-          <Avatar
-            src={user.image ?? undefined}
-            alt={user.name}
-            sx={{ width: 28, height: 28 }}
-          >
-            {user.name.charAt(0)}
-          </Avatar>
-          <Typography variant="body2" color="text.secondary" noWrap>
-            {user.email}
-          </Typography>
-          <SignOutButton />
-        </Stack>
         {admin ? (
           children
         ) : (

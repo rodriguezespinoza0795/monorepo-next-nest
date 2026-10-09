@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import Avatar from "@mui/material/Avatar";
 import Box from "@mui/material/Box";
-import Button from "@mui/material/Button";
 import Card from "@mui/material/Card";
 import Divider from "@mui/material/Divider";
 import MuiLink from "@mui/material/Link";
@@ -15,7 +14,6 @@ import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import TagIcon from "@mui/icons-material/Tag";
 import { FeedLayout } from "@repo/ui/feed/feed-layout";
 import { SpaceNav } from "@repo/ui/feed/space-nav";
-import { authClient } from "../../lib/auth-client";
 import { profileHref } from "../../lib/routes";
 import { SPACES } from "../../lib/spaces";
 
@@ -38,47 +36,30 @@ const spaceItems = SPACES.map((space) => ({
   icon: <TagIcon fontSize="small" />,
 }));
 
-const UserBox = ({ user }: Pick<FeedShellProps, "user">) => {
-  const router = useRouter();
-  const [signingOut, setSigningOut] = useState(false);
-
-  const signOut = async () => {
-    setSigningOut(true);
-    await authClient.signOut();
-    router.push("/login");
-  };
-
-  return (
-    <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", px: 1 }}>
-      <Avatar
-        src={user.image ?? undefined}
-        alt={user.name}
-        sx={{ width: 32, height: 32 }}
-      >
-        {user.name.charAt(0)}
-      </Avatar>
-      <MuiLink
-        component={Link}
-        href={profileHref(user.id) ?? "/feed"}
-        noWrap
-        color="inherit"
-        underline="hover"
-        aria-label="Mi perfil"
-        sx={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 500 }}
-      >
-        {user.name}
-      </MuiLink>
-      <Button
-        size="small"
-        onClick={signOut}
-        disabled={signingOut}
-        sx={{ flexShrink: 0 }}
-      >
-        Salir
-      </Button>
-    </Stack>
-  );
-};
+// Acceso a tu perfil desde el menú lateral (cerrar sesión está en el menú
+// de la cuenta, en el encabezado).
+const UserBox = ({ user }: Pick<FeedShellProps, "user">) => (
+  <Stack direction="row" spacing={1.5} sx={{ alignItems: "center", px: 1 }}>
+    <Avatar
+      src={user.image ?? undefined}
+      alt={user.name}
+      sx={{ width: 32, height: 32 }}
+    >
+      {user.name.charAt(0)}
+    </Avatar>
+    <MuiLink
+      component={Link}
+      href={profileHref(user.id) ?? "/feed"}
+      noWrap
+      color="inherit"
+      underline="hover"
+      aria-label="Mi perfil"
+      sx={{ flex: 1, minWidth: 0, fontSize: 14, fontWeight: 500 }}
+    >
+      {user.name}
+    </MuiLink>
+  </Stack>
+);
 
 const CommunityAside = () => (
   <Stack spacing={2}>

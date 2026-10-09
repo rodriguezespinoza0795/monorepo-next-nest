@@ -5,6 +5,7 @@ import { auth } from "../../lib/auth";
 import { isBanned } from "../../lib/membership";
 import { FeedShell } from "./feed-shell";
 import { FeedsProvider } from "./feeds-provider";
+import { AccountMenu } from "./account-menu";
 import { NotificationsMenu } from "./notifications-menu";
 import { SuspendedNotice } from "./suspended-notice";
 import { BRAND } from "@repo/community/brand";
@@ -32,8 +33,12 @@ export default async function FeedLayout({ children }: LayoutProps<"/feed">) {
     <FeedsProvider user={user}>
       <SiteHeader
         brand={BRAND.name}
-        action={{ label: "Inicio", href: "/" }}
-        extra={<NotificationsMenu />}
+        extra={
+          <>
+            <NotificationsMenu />
+            <AccountMenu user={{ ...user, email: session.user.email }} />
+          </>
+        }
       />
       <FeedShell user={user}>{children}</FeedShell>
     </FeedsProvider>

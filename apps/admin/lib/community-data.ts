@@ -1,5 +1,6 @@
 import "server-only";
 import type { ActivityResponse } from "@stream-io/node-sdk";
+import { isUploadedImage, linkPreviewsOf } from "@repo/community/attachments";
 import { stream } from "@repo/community/stream";
 
 const SYSTEM_USER_ID = "system";
@@ -30,11 +31,11 @@ export const toPostCard = (
   space: activity.feeds
     .map((fid) => spaceNames.get(fid))
     .find((name) => name !== undefined),
-  images: activity.attachments.flatMap((attachment) =>
-    attachment.type === "image" && attachment.image_url
-      ? [{ url: attachment.image_url, alt: attachment.title }]
-      : [],
-  ),
+  images: activity.attachments.filter(isUploadedImage).map((attachment) => ({
+    url: attachment.image_url,
+    alt: attachment.title,
+  })),
+  linkPreviews: linkPreviewsOf(activity.attachments, activity.text),
   reactionCount: activity.reaction_groups.like?.count ?? 0,
   commentCount: activity.comment_count,
 });

@@ -11,7 +11,8 @@ import Typography from "@mui/material/Typography";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
-import { MentionText, type Mention } from "./mention-text";
+import { LinkPreviews, type LinkPreview } from "./link-preview-card";
+import { RichText, type Mention } from "./rich-text";
 import { RelativeTime } from "./relative-time";
 
 export interface PostImage {
@@ -28,6 +29,8 @@ export interface PostCardProps {
   mentions?: Mention[];
   space?: string;
   images?: PostImage[];
+  /** Tarjetas de los enlaces del texto. */
+  linkPreviews?: LinkPreview[];
   reactionCount: number;
   commentCount: number;
   /** Enlace al detalle del post (fecha y botón de comentarios). */
@@ -61,6 +64,7 @@ export const PostCard = ({
   mentions,
   space,
   images = [],
+  linkPreviews = [],
   reactionCount,
   commentCount,
   href,
@@ -132,7 +136,7 @@ export const PostCard = ({
           color: "text.primary",
         }}
       >
-        <MentionText
+        <RichText
           text={text}
           mentions={mentions}
           linkComponent={linkComponent}
@@ -169,6 +173,8 @@ export const PostCard = ({
         ))}
       </Box>
     )}
+
+    <LinkPreviews previews={linkPreviews} />
 
     <Stack
       direction="row"
