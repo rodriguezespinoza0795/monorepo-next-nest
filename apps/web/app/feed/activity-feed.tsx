@@ -24,6 +24,7 @@ import { EmptyState } from "@repo/ui/feed/empty-state";
 import { PostCardSkeleton } from "@repo/ui/feed/post-card-skeleton";
 import { ActivityPostCard } from "./activity-post-card";
 import { ConnectedPostComposer } from "./connected-post-composer";
+import { reportError } from "../../lib/report-error";
 
 const PAGE_SIZE = 10;
 
@@ -68,13 +69,18 @@ const ActivityList = ({
   const { activities, is_loading, has_next_page, loadNextPage } =
     useFeedActivities(feed);
   const pinnedActivities = usePinnedActivities(feed);
-  const pinned = useMemo(
-    () =>
-      (pinnedActivities ?? [])
-        .map((pin) => pin.activity)
-        .filter((activity) => !activity.deleted_at),
-    [pinnedActivities],
-  );
+  // Sin repetidos: el evento en tiempo real "fijado" y la recarga del feed
+  // pueden agregar la misma publicación dos veces al estado del SDK.
+  const pinned = useMemo(() => {
+    const seen = new Set<string>();
+    return (pinnedActivities ?? [])
+      .map((pin) => pin.activity)
+      .filter((activity) => {
+        if (activity.deleted_at || seen.has(activity.id)) return false;
+        seen.add(activity.id);
+        return true;
+      });
+  }, [pinnedActivities]);
   const sentinel = useRef<HTMLDivElement>(null);
 
   // Scroll infinito: carga la siguiente página al acercarse al final.
@@ -178,7 +184,7 @@ export const ActivityFeed = ({
         if (!cancelled) setStatus("ready");
       })
       .catch((err: unknown) => {
-        console.error("[stream] no se pudo cargar el feed", err);
+        reportError("[stream] no se pudo cargar el feed", err);
         if (!cancelled) setStatus("error");
       });
     return () => {

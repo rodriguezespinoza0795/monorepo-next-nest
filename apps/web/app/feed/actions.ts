@@ -11,6 +11,7 @@ import { isStreamIdList, validMentions } from "../../lib/mentions";
 import { takeRateLimit } from "../../lib/rate-limit";
 import { canPostIn, findSpace } from "../../lib/spaces";
 import { stream } from "../../lib/stream";
+import { reportError } from "../../lib/report-error";
 
 const MAX_TEXT_LENGTH = 5000;
 const MAX_COMMENT_LENGTH = 2000;
@@ -110,7 +111,7 @@ export async function createPost(input: {
     });
     return { ok: true };
   } catch (error) {
-    console.error("[stream] no se pudo publicar", error);
+    reportError("[stream] no se pudo publicar", error);
     return fail("No pudimos publicar. Inténtalo de nuevo.");
   }
 }
@@ -196,7 +197,7 @@ export async function addComment(input: {
     });
     return { ok: true };
   } catch (error) {
-    console.error("[stream] no se pudo comentar", error);
+    reportError("[stream] no se pudo comentar", error);
     return fail("No pudimos enviar tu comentario. Inténtalo de nuevo.");
   }
 }
@@ -280,7 +281,7 @@ export async function updatePost(input: {
     });
     return { ok: true };
   } catch (error) {
-    console.error("[stream] no se pudo editar la publicación", error);
+    reportError("[stream] no se pudo editar la publicación", error);
     return fail("No pudimos guardar los cambios. Inténtalo de nuevo.");
   }
 }
@@ -301,7 +302,7 @@ export async function deleteOwnPost(activityId: string): Promise<ActionResult> {
     await stream.feeds.deleteActivity({ id: activity.id });
     return { ok: true };
   } catch (error) {
-    console.error("[stream] no se pudo eliminar la publicación", error);
+    reportError("[stream] no se pudo eliminar la publicación", error);
     return fail("No pudimos eliminar la publicación. Inténtalo de nuevo.");
   }
 }
@@ -353,7 +354,7 @@ export async function updateComment(input: {
     });
     return { ok: true };
   } catch (error) {
-    console.error("[stream] no se pudo editar el comentario", error);
+    reportError("[stream] no se pudo editar el comentario", error);
     return fail("No pudimos guardar los cambios. Inténtalo de nuevo.");
   }
 }
@@ -376,7 +377,7 @@ export async function deleteOwnComment(
     await stream.feeds.deleteComment({ id: comment.id });
     return { ok: true };
   } catch (error) {
-    console.error("[stream] no se pudo eliminar el comentario", error);
+    reportError("[stream] no se pudo eliminar el comentario", error);
     return fail("No pudimos eliminar el comentario. Inténtalo de nuevo.");
   }
 }
@@ -450,7 +451,7 @@ export async function setPostPinned(
     );
     return { ok: true };
   } catch (error) {
-    console.error("[stream] no se pudo cambiar el destacado", error);
+    reportError("[stream] no se pudo cambiar el destacado", error);
     return fail("No pudimos cambiar el destacado. Inténtalo de nuevo.");
   }
 }

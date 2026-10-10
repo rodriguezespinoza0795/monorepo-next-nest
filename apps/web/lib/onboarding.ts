@@ -4,6 +4,7 @@ import { SYSTEM_USER_ID, spaceFid, timelineFid } from "./feeds";
 import { getOrCreateOwnedFeed } from "./owned-feed";
 import { SPACES } from "./spaces";
 import { stream } from "./stream";
+import { reportWarning } from "./report-error";
 
 interface StreamUser {
   id: string;
@@ -23,12 +24,14 @@ export const onboardStreamUser = async ({ id, name, image }: StreamUser) => {
 
   const [timelineCreated] = await Promise.all([
     getOrCreateOwnedFeed(stream, {
+      onTakeover: (message) => reportWarning(message),
       group: "timeline",
       id,
       ownerId: id,
       authorId: id,
     }),
     getOrCreateOwnedFeed(stream, {
+      onTakeover: (message) => reportWarning(message),
       group: "profile",
       id,
       ownerId: SYSTEM_USER_ID,
@@ -36,6 +39,7 @@ export const onboardStreamUser = async ({ id, name, image }: StreamUser) => {
     }),
     // Notificaciones del miembro (comentarios, reacciones y menciones).
     getOrCreateOwnedFeed(stream, {
+      onTakeover: (message) => reportWarning(message),
       group: "notification",
       id,
       ownerId: id,

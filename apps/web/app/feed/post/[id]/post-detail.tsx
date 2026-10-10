@@ -40,6 +40,7 @@ import {
   isCommentLikedByMe,
   useToggleCommentLike,
 } from "../../use-toggle-comment-like";
+import { reportError } from "../../../../lib/report-error";
 
 const COMMENTS_PAGE_SIZE = 20;
 const MAX_COMMENT_LENGTH = 2000;
@@ -344,7 +345,7 @@ const ConnectedPostDetail = ({ activityId }: { activityId: string }) => {
         settle();
       })
       .catch((error: unknown) => {
-        console.error("[stream] no se pudo cargar la publicación", error);
+        reportError("[stream] no se pudo cargar la publicación", error);
         if (!cancelled) setStatus("error");
         settle();
       });

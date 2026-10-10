@@ -172,7 +172,7 @@ Reglas que hoy dependen solo de la interfaz o que Stream no hace cumplir como qu
 6. ~~**El administrador no es admin en Stream.**~~ **Cerrada en PR 6:** modera desde el panel de `apps/admin` con server actions (sigue sin ser admin en Stream; no lo necesita).
 7. **`own_capabilities` de Stream no es confiable para la UI.** En espacios `visible` sigue listando `add-activity` aunque publicar devuelve 403; la UI decide con `canPostIn` (`lib/spaces.ts`).
 8. ~~**Menciones en comentarios sin validar en el servidor.**~~ **Cerrada en v2 PR 1:** `addComment` las valida igual que `createPost`.
-9. **"Eliminadas" revisa solo las últimas 500 publicaciones.** Stream no permite filtrar por fecha de borrado, así que una publicación eliminada más antigua no aparece en la lista (se puede restaurar por API). Restaurar comentarios no tiene UI (Stream lo permite con `restoreComment`).
+9. **"Eliminadas" revisa solo las últimas 500 publicaciones.** Stream no permite filtrar por fecha de borrado, así que una publicación eliminada más antigua no aparece en la lista (se puede restaurar por API). Restaurar comentarios no tiene UI (Stream lo permite con `restoreComment`); iba con los reportes, que se descartaron.
 
 ### Enlaces y "· editado"
 

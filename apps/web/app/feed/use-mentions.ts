@@ -7,6 +7,7 @@ import {
 } from "@stream-io/feeds-react-sdk";
 import type { MentionUser } from "@repo/ui/feed/mention-text-field";
 import { SYSTEM_USER_ID } from "../../lib/feeds";
+import { reportError } from "../../lib/report-error";
 
 const MAX_SUGGESTIONS = 6;
 const DEBOUNCE_MS = 150;
@@ -58,7 +59,7 @@ export const useMentions = (
           );
         })
         .catch((error: unknown) => {
-          console.error("[stream] no se pudo buscar personas", error);
+          reportError("[stream] no se pudo buscar personas", error);
           setSuggestions([]);
         });
     }, DEBOUNCE_MS);

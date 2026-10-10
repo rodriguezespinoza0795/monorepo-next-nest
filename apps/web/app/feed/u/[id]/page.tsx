@@ -8,6 +8,7 @@ import { getOrCreateOwnedFeed } from "../../../../lib/owned-feed";
 import { stream } from "../../../../lib/stream";
 import { ActivityFeed } from "../../activity-feed";
 import { BRAND } from "@repo/community/brand";
+import { reportWarning } from "../../../../lib/report-error";
 
 const STREAM_ID = /^[A-Za-z0-9_-]{1,64}$/;
 
@@ -40,6 +41,7 @@ export default async function ProfilePage({
   // navegador lo pida: si lo creara el visitante, quedaría como dueño y
   // podría publicar en el perfil ajeno.
   await getOrCreateOwnedFeed(stream, {
+    onTakeover: (message) => reportWarning(message),
     group: "profile",
     id: member.id,
     ownerId: SYSTEM_USER_ID,

@@ -5,6 +5,7 @@ import {
   useFeedsClient,
   type ActivityResponse,
 } from "@stream-io/feeds-react-sdk";
+import { reportError } from "../../lib/report-error";
 
 export const isSavedByMe = (activity: ActivityResponse) =>
   activity.own_bookmarks.length > 0;
@@ -27,7 +28,7 @@ export const useToggleBookmark = () => {
       }
       return true;
     } catch (error) {
-      console.error("[stream] no se pudo actualizar el guardado", error);
+      reportError("[stream] no se pudo actualizar el guardado", error);
       return false;
     } finally {
       pending.current.delete(activity.id);

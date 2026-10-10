@@ -12,6 +12,7 @@ export const getOrCreateOwnedFeed = async (
     id,
     ownerId,
     authorId,
+    onTakeover = console.warn,
   }: {
     group: string;
     id: string;
@@ -22,6 +23,11 @@ export const getOrCreateOwnedFeed = async (
      * ejemplo, en notificaciones, que crean otros) solo se transfiere.
      */
     authorId?: string;
+    /**
+     * Aviso de que alguien se adelantó a crear el feed (la app lo envía a
+     * Sentry; el script de setup, que no usa Next, a la consola).
+     */
+    onTakeover?: (message: string) => void;
   },
 ) => {
   const response = await client.feeds.getOrCreateFeed({
@@ -32,7 +38,7 @@ export const getOrCreateOwnedFeed = async (
   const currentOwner = response.feed.created_by.id;
   if (currentOwner === ownerId) return response.created;
 
-  console.warn(
+  onTakeover(
     `[stream] ${group}:${id} tenía otro dueño (${currentOwner}); se transfiere a ${ownerId}`,
   );
   await client.feeds.updateFeed({

@@ -6,6 +6,7 @@ import {
   type CommentResponse,
 } from "@stream-io/feeds-react-sdk";
 import { withNotificationFallback } from "../../lib/notifications";
+import { reportError } from "../../lib/report-error";
 
 const LIKE = "like";
 
@@ -43,7 +44,7 @@ export const useToggleCommentLike = () => {
         );
       }
     } catch (error) {
-      console.error("[stream] no se pudo actualizar el me gusta", error);
+      reportError("[stream] no se pudo actualizar el me gusta", error);
     } finally {
       pending.current.delete(comment.id);
     }

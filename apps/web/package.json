@@ -23,6 +23,7 @@
     "@mui/material-nextjs": "^9.4.0",
     "@repo/community": "workspace:*",
     "@repo/ui": "workspace:*",
+    "@sentry/nextjs": "^11.6.0",
     "@stream-io/feeds-react-sdk": "^1.0.23",
     "@stream-io/node-sdk": "^0.8.11",
     "@upstash/ratelimit": "^2.2.0",
