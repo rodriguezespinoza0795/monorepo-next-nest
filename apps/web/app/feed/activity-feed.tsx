@@ -24,6 +24,7 @@ import { EmptyState } from "@repo/ui/feed/empty-state";
 import { PostCardSkeleton } from "@repo/ui/feed/post-card-skeleton";
 import { ActivityPostCard } from "./activity-post-card";
 import { ConnectedPostComposer } from "./connected-post-composer";
+import { reportError } from "../../lib/report-error";
 
 const PAGE_SIZE = 10;
 
@@ -178,7 +179,7 @@ export const ActivityFeed = ({
         if (!cancelled) setStatus("ready");
       })
       .catch((err: unknown) => {
-        console.error("[stream] no se pudo cargar el feed", err);
+        reportError("[stream] no se pudo cargar el feed", err);
         if (!cancelled) setStatus("error");
       });
     return () => {

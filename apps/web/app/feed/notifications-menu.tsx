@@ -17,6 +17,7 @@ import {
 import { plainText } from "@repo/ui/feed/rich-text";
 import { postHref } from "../../lib/routes";
 import { RequireFeedsClient } from "./require-feeds-client";
+import { reportError } from "../../lib/report-error";
 
 const PAGE_SIZE = 15;
 const EXCERPT_LENGTH = 80;
@@ -103,7 +104,7 @@ const ConnectedNotificationsMenu = () => {
   useEffect(() => {
     if (!client || !feed) return;
     feed.getOrCreate({ watch: true, limit: PAGE_SIZE }).catch((error) => {
-      console.error("[stream] no se pudieron cargar las notificaciones", error);
+      reportError("[stream] no se pudieron cargar las notificaciones", error);
     });
     return () => {
       void client
@@ -121,7 +122,7 @@ const ConnectedNotificationsMenu = () => {
     request: Parameters<NonNullable<typeof feed>["markActivity"]>[0],
   ) =>
     feed?.markActivity(request).catch((error: unknown) => {
-      console.error("[stream] no se pudieron marcar las notificaciones", error);
+      reportError("[stream] no se pudieron marcar las notificaciones", error);
     });
 
   return (

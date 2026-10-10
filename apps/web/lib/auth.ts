@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth";
 import { APIError } from "better-auth/api";
 import { nextCookies } from "better-auth/next-js";
 import { onboardStreamUser } from "./onboarding";
+import { reportError } from "./report-error";
 
 // Sesiones sin base de datos: la sesión y la cuenta viven en cookies cifradas.
 // El `id` que genera Better Auth sin base de datos no es estable entre
@@ -37,7 +38,7 @@ export const auth = betterAuth({
               image: user.image,
             });
           } catch (error) {
-            console.error("[stream] onboarding falló", error);
+            reportError("[stream] onboarding falló", error);
           }
         },
       },

@@ -5,6 +5,7 @@ import { syncStreamUser } from "@repo/community/users";
 import { stream } from "@repo/community/stream";
 import { findDeletedPost } from "../../lib/community-data";
 import { requireAdmin } from "../../lib/session";
+import { reportError } from "../../lib/report-error";
 
 // Acciones de moderación. Usan el cliente de servidor de Stream (que pasa por
 // encima de los permisos), así que cada una verifica antes que quien llama sea
@@ -25,7 +26,7 @@ const run = async (
     revalidatePath("/moderacion", "layout");
     return { ok: true };
   } catch (error) {
-    console.error(`[moderación] ${label} falló`, error);
+    reportError(`[moderación] ${label} falló`, error);
     return { ok: false, error: "No se pudo completar la acción." };
   }
 };

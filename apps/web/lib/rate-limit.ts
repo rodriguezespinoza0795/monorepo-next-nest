@@ -1,6 +1,7 @@
 import "server-only";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
+import { reportWarning } from "./report-error";
 
 // Límite de frecuencia compartido por todas las instancias del servidor
 // (Upstash Redis, ventana deslizante). Protege el tope mensual de
@@ -41,13 +42,16 @@ export const takeRateLimit = async (kind: RateLimitKind, key: string) => {
   try {
     const { success, reason } = await limiters[kind].limit(key);
     if (reason === "timeout") {
-      console.warn(
-        `[rate-limit] Upstash tardó demasiado (${kind}); se permite`,
-      );
+      reportWarning("[rate-limit] Upstash tardó demasiado; se permite", {
+        kind,
+      });
     }
     return success;
   } catch (error) {
-    console.error("[rate-limit] Upstash no respondió; se permite", error);
+    reportWarning("[rate-limit] Upstash no respondió; se permite", {
+      kind,
+      error: String(error),
+    });
     return true;
   }
 };

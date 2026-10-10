@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { auth } from "../../lib/auth";
 import { getUnreadSpaceIds, markSpaceSeen } from "../../lib/space-activity";
 import { findSpace } from "../../lib/spaces";
+import { reportError } from "../../lib/report-error";
 
 // Puntos de "publicaciones nuevas" del menú de espacios. Si algo falla, no
 // se muestra ningún punto (no es crítico).
@@ -12,7 +13,7 @@ export async function getUnreadSpaces(): Promise<string[]> {
   const session = await auth.api.getSession({ headers: await headers() });
   if (!session) return [];
   return getUnreadSpaceIds(session.user.streamId).catch((error: unknown) => {
-    console.error("[stream] no se pudieron leer los espacios nuevos", error);
+    reportError("[stream] no se pudieron leer los espacios nuevos", error);
     return [];
   });
 }
@@ -27,7 +28,7 @@ export async function visitSpace(spaceId: string): Promise<string[]> {
     await markSpaceSeen(streamId, spaceId);
     return await getUnreadSpaceIds(streamId);
   } catch (error) {
-    console.error("[stream] no se pudo registrar la visita al espacio", error);
+    reportError("[stream] no se pudo registrar la visita al espacio", error);
     return [];
   }
 }

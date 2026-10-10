@@ -9,6 +9,7 @@ import { PostComposer } from "@repo/ui/feed/post-composer";
 import { createPost } from "./actions";
 import { RequireFeedsClient } from "./require-feeds-client";
 import { useMentions } from "./use-mentions";
+import { reportError } from "../../lib/report-error";
 
 const MAX_IMAGES = 4;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -86,7 +87,7 @@ const Composer = ({ spaces, onPosted }: ConnectedPostComposerProps) => {
           updateImage(id, { uploading: false, url });
         })
         .catch((uploadError: unknown) => {
-          console.error("[stream] no se pudo subir la imagen", uploadError);
+          reportError("[stream] no se pudo subir la imagen", uploadError);
           removeImage(id);
           setError("No pudimos subir una imagen. Inténtalo de nuevo.");
         });

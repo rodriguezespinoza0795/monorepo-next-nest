@@ -58,18 +58,24 @@ Después, en **Settings** de cada proyecto:
 
 ### Variables de entorno (Production)
 
-| Variable                       | `community` (web)                      | `admin`                            |
-| ------------------------------ | -------------------------------------- | ---------------------------------- |
-| `ENABLE_EXPERIMENTAL_COREPACK` | `1`                                    | `1`                                |
-| `NEXT_PUBLIC_STREAM_API_KEY`   | app de Stream de **producción**        | la misma                           |
-| `STREAM_API_SECRET`            | app de Stream de **producción**        | la misma                           |
-| `GOOGLE_CLIENT_ID`             | tu cliente OAuth                       | el mismo                           |
-| `GOOGLE_CLIENT_SECRET`         | tu cliente OAuth                       | el mismo                           |
-| `BETTER_AUTH_SECRET`           | nuevo: `openssl rand -base64 32`       | **otro** nuevo, distinto al de web |
-| `BETTER_AUTH_URL`              | `https://community.TU-DOMINIO`         | `https://admin.TU-DOMINIO`         |
-| `ADMIN_EMAILS`                 | correos del equipo, separados por coma | los mismos                         |
-| `UPSTASH_REDIS_REST_URL`       | base de Upstash de **producción**      | — (no la usa)                      |
-| `UPSTASH_REDIS_REST_TOKEN`     | base de Upstash de **producción**      | —                                  |
+| Variable                       | `community` (web)                                        | `admin`                            |
+| ------------------------------ | -------------------------------------------------------- | ---------------------------------- |
+| `ENABLE_EXPERIMENTAL_COREPACK` | `1`                                                      | `1`                                |
+| `NEXT_PUBLIC_STREAM_API_KEY`   | app de Stream de **producción**                          | la misma                           |
+| `STREAM_API_SECRET`            | app de Stream de **producción**                          | la misma                           |
+| `GOOGLE_CLIENT_ID`             | tu cliente OAuth                                         | el mismo                           |
+| `GOOGLE_CLIENT_SECRET`         | tu cliente OAuth                                         | el mismo                           |
+| `BETTER_AUTH_SECRET`           | nuevo: `openssl rand -base64 32`                         | **otro** nuevo, distinto al de web |
+| `BETTER_AUTH_URL`              | `https://community.TU-DOMINIO`                           | `https://admin.TU-DOMINIO`         |
+| `ADMIN_EMAILS`                 | correos del equipo, separados por coma                   | los mismos                         |
+| `UPSTASH_REDIS_REST_URL`       | base de Upstash de **producción**                        | — (no la usa)                      |
+| `UPSTASH_REDIS_REST_TOKEN`     | base de Upstash de **producción**                        | —                                  |
+| `NEXT_PUBLIC_SENTRY_DSN`       | DSN del proyecto de Sentry `community` (tipo **Config**) | DSN del proyecto `admin`           |
+| `SENTRY_ORG`                   | slug de tu organización en Sentry                        | el mismo                           |
+| `SENTRY_PROJECT`               | slug del proyecto `community`                            | slug del proyecto `admin`          |
+| `SENTRY_AUTH_TOKEN`            | token de organización (source maps)                      | el mismo                           |
+
+Sentry es opcional: sin `NEXT_PUBLIC_SENTRY_DSN` queda apagado, y sin `SENTRY_AUTH_TOKEN` el build no sube source maps (los errores llegan, pero con el código compilado). El DSN es público (lo usa el navegador); el token es secreto. Al cambiar el DSN, redespliega sin caché (es `NEXT_PUBLIC_`).
 
 `ENABLE_EXPERIMENTAL_COREPACK=1` hace que Vercel use la versión exacta de pnpm del campo `packageManager` (pnpm 11); sin ella Vercel solo detecta hasta pnpm 10.
 

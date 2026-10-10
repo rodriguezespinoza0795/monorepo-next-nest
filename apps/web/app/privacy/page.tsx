@@ -112,6 +112,12 @@ export default function PrivacyPage() {
                     <strong>Upstash</strong>, que guarda los contadores
                     temporales del límite de frecuencia.
                   </li>
+                  <li>
+                    <strong>Sentry</strong>, que registra los errores técnicos
+                    de la aplicación para poder corregirlos: el mensaje del
+                    error, la página, el navegador y tu identificador interno
+                    (no tu nombre, correo ni dirección IP).
+                  </li>
                 </ul>
                 <p>
                   Estos proveedores pueden procesar datos fuera de tu país. No

@@ -9,6 +9,7 @@ import {
 } from "@stream-io/feeds-react-sdk";
 import { timelineFid } from "../../lib/feeds";
 import { RequireFeedsClient } from "./require-feeds-client";
+import { reportError } from "../../lib/report-error";
 
 // Unirse / salir de un espacio = que el timeline del miembro siga o deje de
 // seguir el feed del espacio. Lo permiten los permisos de Stream (`follow`).
@@ -40,7 +41,7 @@ const ConnectedSpaceMembershipButton = ({ spaceId }: { spaceId: string }) => {
       if (joined) await timelineFeed.unfollow(`space:${spaceId}`);
       else await timelineFeed.follow(`space:${spaceId}`);
     } catch (error) {
-      console.error("[stream] no se pudo cambiar la membresía", error);
+      reportError("[stream] no se pudo cambiar la membresía", error);
     } finally {
       setPending(false);
     }
