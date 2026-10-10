@@ -60,18 +60,34 @@ export const MembersControls = ({
         maxLength={maxLength}
       />
       {!query && (
+        // Enlaces reales: funcionan aunque la página aún no termine de
+        // cargar su JavaScript (y se pueden abrir en otra pestaña).
         <ToggleButtonGroup
           exclusive
           size="small"
           value={sort}
-          onChange={(_, value: MemberSort | null) =>
-            value && go(hrefFor({ sort: value }))
-          }
           aria-label="Orden"
           sx={{ alignSelf: "flex-start" }}
         >
-          <ToggleButton value="recent">Más recientes</ToggleButton>
-          <ToggleButton value="name">A–Z</ToggleButton>
+          {(
+            [
+              ["recent", "Más recientes"],
+              ["name", "A–Z"],
+            ] as const
+          ).map(([value, label]) => (
+            <ToggleButton
+              key={value}
+              value={value}
+              component={Link}
+              href={hrefFor({ sort: value })}
+              replace
+              scroll={false}
+              aria-pressed={undefined}
+              aria-current={sort === value ? "page" : undefined}
+            >
+              {label}
+            </ToggleButton>
+          ))}
         </ToggleButtonGroup>
       )}
     </Stack>

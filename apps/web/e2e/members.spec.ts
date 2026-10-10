@@ -77,11 +77,11 @@ test("orden A–Z y sin miembros bloqueados", async ({
   });
 
   await page.goto("/feed/members");
-  await page.getByRole("button", { name: "A–Z" }).click();
+  await page.getByRole("link", { name: "A–Z" }).click();
   await expect(page).toHaveURL(/sort=name/);
-  await expect(page.getByRole("button", { name: "A–Z" })).toHaveAttribute(
-    "aria-pressed",
-    "true",
+  await expect(page.getByRole("link", { name: "A–Z" })).toHaveAttribute(
+    "aria-current",
+    "page",
   );
 
   await page.goto(`/feed/members?q=${tag}`);
