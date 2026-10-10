@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   // Las pruebas de punta a punta compilan en su propia carpeta para no
   // chocar con el servidor de desarrollo (ver playwright.config.ts).
   distDir: process.env.NEXT_DIST_DIR || ".next",
+  // Sin `AGENTS.md` / `CLAUDE.md` generados por `next dev`: las reglas del
+  // proyecto viven en el `CLAUDE.md` de la raíz.
+  agentRules: false,
 };
 
 // Sube los source maps a Sentry en el build (solo si hay `SENTRY_AUTH_TOKEN`;
