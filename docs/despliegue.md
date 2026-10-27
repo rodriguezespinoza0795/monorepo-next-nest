@@ -59,7 +59,7 @@ Repite para cada app (`main`, `web` y `admin`) que todavía no tenga proyecto:
 
 Después, en **Settings** de cada proyecto:
 
-- **Build and Deployment → Node.js Version:** 24.x (es el valor por defecto).
+- **Build and Deployment → Node.js Version:** 24.x. Cada app lo pide en su `package.json` (`engines`), pero confírmalo: con una versión vieja, `firebase-admin` falla al cargar con `ERR_REQUIRE_ESM` (`jose`).
 - **Build and Deployment → Ignored Build Step:** para no construir previews (no tienen login ni variables), usa el comando
   ```
   if [ "$VERCEL_ENV" = "production" ]; then exit 1; else exit 0; fi

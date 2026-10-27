@@ -46,5 +46,8 @@
     "eslint": "10.9.1",
     "firebase-admin": "^14.5.0",
     "typescript": "7.0.2"
+  },
+  "engines": {
+    "node": ">=24"
   }
 }
