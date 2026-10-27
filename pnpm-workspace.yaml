@@ -5,3 +5,8 @@ allowBuilds:
   '@firebase/util': false
   '@stream-io/node-sdk': false
   protobufjs: false
+overrides:
+  # firebase-admin → jwks-rsa → jose 6 (solo ESM): en Vercel falla con
+  # ERR_REQUIRE_ESM. jose 5 tiene build CommonJS y la misma API que usa
+  # jwks-rsa (importJWK, exportSPKI, decodeJwt, decodeProtectedHeader).
+  jwks-rsa>jose: ^5.10.0
