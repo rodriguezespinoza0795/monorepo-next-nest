@@ -6,7 +6,7 @@ Roles, permisos, qué ve cada rol, límites y brechas conocidas de la comunidad 
 
 ## Cambios visuales: siempre en `web` y `admin`
 
-Todo cambio visual (tema, tipografía, colores, layout, componentes de UI, estilos globales) se aplica **siempre en las dos apps**, `apps/web` y `apps/admin`, para que se vean consistentes. No dejes una app con el diseño nuevo y la otra con el anterior.
+Todo cambio visual (tema, tipografía, colores, layout, componentes de UI, estilos globales) se aplica **siempre en las dos apps**, `apps/web` y `apps/admin`, para que se vean consistentes. No dejes una app con el diseño nuevo y la otra con el anterior. La demo de la app principal, `apps/main` (puerto 3002, login con Firebase), usa el mismo tema compartido: si el cambio toca `packages/ui` o los archivos replicados, aplícalo y verifícalo también ahí.
 
 - Lo compartido va en `packages/ui` (tema, `ThemeProvider`, componentes reutilizables como el encabezado) y ambas apps lo importan.
 - Lo que vive en cada app (`app/layout.tsx`, `app/globals.css`, fuentes con `next/font`) se replica en las dos.
@@ -24,8 +24,10 @@ Todo cambio visual se valida **también en móvil**, en `web` y en `admin`, ante
 Con los servidores de desarrollo corriendo (`web` :3000, `admin` :3001):
 
 ```sh
-~/.venvs/playwright/bin/python .claude/scripts/mobile_check.py <carpeta-de-capturas> [ruta]
+~/.venvs/playwright/bin/python .claude/scripts/mobile_check.py <carpeta-de-capturas> [ruta] [--apps=web,admin,main]
 ```
+
+Por defecto revisa `web` y `admin`; con `--apps` se elige cuáles (por ejemplo `--apps=main` con `main` corriendo en :3002).
 
 Revisa el reporte **y las capturas**: sin desborde horizontal, sin errores de consola, textos y botones completos y legibles, y menús que abren y cierran. Para validar otra página, pasa su ruta (por ejemplo `/login`).
 
