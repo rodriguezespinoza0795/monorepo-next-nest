@@ -12,11 +12,11 @@ El login vive solo en `main`: crea una cookie de sesión de Firebase en el domin
 
 Producción usa **servicios propios**, separados de desarrollo y de las pruebas:
 
-| Servicio | Desarrollo             | Pruebas (E2E)       | Producción                 |
-| -------- | ---------------------- | ------------------- | -------------------------- |
-| Stream   | app de desarrollo      | app de pruebas      | **app de producción**      |
-| Upstash  | base de desarrollo     | (la de desarrollo)  | **base de producción**     |
-| Firebase | proyecto de desarrollo | proyecto de pruebas | **proyecto de producción** |
+| Servicio | Desarrollo                            | Pruebas (E2E)                      | Producción                                                                |
+| -------- | ------------------------------------- | ---------------------------------- | ------------------------------------------------------------------------- |
+| Stream   | app de desarrollo                     | app de pruebas                     | **app de producción**                                                     |
+| Upstash  | base de desarrollo                    | (la de desarrollo)                 | **base de producción**                                                    |
+| Firebase | proyecto de desarrollo (`davire-dev`) | proyecto de pruebas (`davidre-ci`) | **proyecto de producción** (por ahora `davire-dev`; pendiente uno propio) |
 
 ## 1. Preparar la app de Stream de producción
 
