@@ -1,4 +1,4 @@
-"""Mobile validation for web and admin.
+"""Mobile validation for web, admin and main.
 
 Emulates an iPhone 13 (390x844, touch) with Playwright and, for each app:
 - takes a full-page screenshot,
@@ -6,10 +6,11 @@ Emulates an iPhone 13 (390x844, touch) with Playwright and, for each app:
 - reports console errors and page exceptions,
 - if the header has a mobile menu, opens it and takes a screenshot.
 
-The dev servers must already be running (web on :3000, admin on :3001).
+The dev servers must already be running (web on :3000, admin on :3001,
+main on :3002). By default it checks web and admin; pick others with --apps.
 
 Usage:
-    ~/.venvs/playwright/bin/python .claude/scripts/mobile_check.py <output_dir> [path]
+    ~/.venvs/playwright/bin/python .claude/scripts/mobile_check.py <output_dir> [path] [--apps=web,admin,main]
 """
 
 import json
@@ -18,7 +19,12 @@ from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-APPS = {"web": "http://localhost:3000", "admin": "http://localhost:3001"}
+APPS = {
+    "web": "http://localhost:3000",
+    "admin": "http://localhost:3001",
+    "main": "http://localhost:3002",
+}
+DEFAULT_APPS = ["web", "admin"]
 
 OVERFLOW_JS = """() => {
   const width = document.documentElement.clientWidth;
@@ -68,15 +74,18 @@ def check_app(playwright, name, base_url, path, out_dir):
 
 
 def main():
-    if len(sys.argv) < 2:
+    flags = [arg for arg in sys.argv[1:] if arg.startswith("--apps=")]
+    args = [arg for arg in sys.argv[1:] if not arg.startswith("--apps=")]
+    if not args:
         print(__doc__)
         sys.exit(1)
-    out_dir = Path(sys.argv[1])
+    out_dir = Path(args[0])
     out_dir.mkdir(parents=True, exist_ok=True)
-    path = sys.argv[2] if len(sys.argv) > 2 else "/"
+    path = args[1] if len(args) > 1 else "/"
+    names = flags[-1].removeprefix("--apps=").split(",") if flags else DEFAULT_APPS
 
     with sync_playwright() as playwright:
-        report = {name: check_app(playwright, name, url, path, out_dir) for name, url in APPS.items()}
+        report = {name: check_app(playwright, name, APPS[name], path, out_dir) for name in names}
 
     print(json.dumps(report, indent=2, ensure_ascii=False))
     print(f"\nScreenshots in: {out_dir}")
