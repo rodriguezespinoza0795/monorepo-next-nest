@@ -1,9 +1,8 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import LogoutIcon from "@mui/icons-material/Logout";
 import { UserMenu } from "@repo/ui/user-menu";
-import { authClient } from "../../lib/auth-client";
+import { signOut } from "../session-actions";
 
 // Menú de la cuenta en el encabezado del panel (igual que en la comunidad).
 export const AccountMenu = ({
@@ -11,8 +10,6 @@ export const AccountMenu = ({
 }: {
   user: { name: string; email: string; image?: string | null };
 }) => {
-  const router = useRouter();
-
   return (
     <UserMenu
       name={user.name}
@@ -22,10 +19,7 @@ export const AccountMenu = ({
         {
           label: "Cerrar sesión",
           icon: <LogoutIcon fontSize="small" />,
-          onClick: async () => {
-            await authClient.signOut();
-            router.push("/login");
-          },
+          onClick: () => void signOut(),
         },
       ]}
     />
