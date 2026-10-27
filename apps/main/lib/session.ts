@@ -21,7 +21,11 @@ const adminAuth = () => {
       credential: cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+        // Sin comillas alrededor (si se copiaron de `.env.local`) y con los
+        // `\n` escritos convertidos en saltos de línea.
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.trim()
+          .replace(/^(["'])([\s\S]*)\1$/, "$2")
+          .replace(/\\n/g, "\n"),
       }),
     });
   return getAuth(app);
