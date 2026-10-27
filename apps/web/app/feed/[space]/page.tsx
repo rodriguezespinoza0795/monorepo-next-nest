@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
-import { isAdmin } from "../../../lib/admins";
-import { auth } from "../../../lib/auth";
+import { getSession } from "../../../lib/session";
 import { canPostIn, findSpace } from "../../../lib/spaces";
 import { FeedHeader } from "@repo/ui/feed/feed-header";
 import { ActivityFeed } from "../activity-feed";
@@ -22,9 +20,9 @@ export default async function SpacePage({
   const space = findSpace((await params).space);
   if (!space) notFound();
 
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) redirect("/login");
-  const admin = isAdmin(session.user.email);
+  const admin = session.user.admin;
   const canPost = canPostIn(space, admin);
 
   return (

@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Stack from "@mui/material/Stack";
 import GroupsOutlinedIcon from "@mui/icons-material/GroupsOutlined";
@@ -18,7 +17,7 @@ import {
 } from "@repo/community/search";
 import { EmptyState } from "@repo/ui/feed/empty-state";
 import { FeedHeader } from "@repo/ui/feed/feed-header";
-import { auth } from "../../../lib/auth";
+import { getSession } from "../../../lib/session";
 import { takeRateLimit } from "../../../lib/rate-limit";
 import { MembersControls, MembersGrid } from "./members-view";
 
@@ -32,7 +31,7 @@ const first = (value: string | string[] | undefined) =>
 export default async function MembersPage({
   searchParams,
 }: PageProps<"/feed/members">) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) redirect("/login");
 
   const params = await searchParams;

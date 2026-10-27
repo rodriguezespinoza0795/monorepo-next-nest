@@ -1,5 +1,4 @@
-import { headers } from "next/headers";
-import { auth } from "../../../../lib/auth";
+import { getSession } from "../../../../lib/session";
 import { syncStreamUser } from "@repo/community/users";
 import { stream } from "../../../../lib/stream";
 
@@ -7,7 +6,7 @@ const TOKEN_VALIDITY_SECONDS = 60 * 60;
 
 // Firma un token de Stream para el usuario con sesión y sincroniza su perfil.
 export async function GET() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) {
     return Response.json({ error: "No autenticado" }, { status: 401 });
   }

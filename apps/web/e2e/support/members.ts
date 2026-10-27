@@ -1,37 +1,42 @@
 import { randomUUID } from "node:crypto";
 import type { BrowserContext } from "@playwright/test";
 import { StreamClient } from "@stream-io/node-sdk";
-import { betterAuth } from "better-auth";
-import { E2E_BASE_URL } from "../../playwright.config";
+import { cert, initializeApp } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
+import { SESSION_COOKIE } from "@repo/auth/cookie";
 
 // Miembros temporales para las pruebas: existen en la app de Stream de
-// pruebas, con su sesión firmada como la firmaría el login con Google.
+// pruebas, y su sesión es una cookie de Firebase como la que crea la app
+// principal al iniciar sesión (en el proyecto de Firebase de pruebas).
 
 export const stream = new StreamClient(
   process.env.NEXT_PUBLIC_STREAM_API_KEY as string,
   process.env.STREAM_API_SECRET as string,
 );
 
-// Misma configuración de sesión que `lib/auth.ts` (cookies cifradas, sin
-// base de datos): las cookies que crea son válidas para el servidor.
-const auth = betterAuth({
-  baseURL: E2E_BASE_URL,
-  secret: process.env.BETTER_AUTH_SECRET,
-  emailAndPassword: { enabled: true },
-  user: { additionalFields: { streamId: { type: "string", required: true } } },
-  session: {
-    cookieCache: {
-      enabled: true,
-      maxAge: 60 * 60,
-      strategy: "jwe",
-      refreshCache: true,
+const firebase = getAuth(
+  initializeApp(
+    {
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, "\n"),
+      }),
     },
-  },
-  logger: { disabled: true },
-});
+    "e2e",
+  ),
+);
+
+/** Prefijo del uid de Firebase de los miembros de prueba. */
+const TEST_UID_PREFIX = "e2e_";
+/** Prefijo de su id en Stream (`f_<uid>`, como `streamUserId`). */
+const TEST_ID_PREFIX = `f_${TEST_UID_PREFIX}`;
 
 export interface Member {
+  /** Id en Stream. */
   id: string;
+  /** Uid en Firebase. */
+  uid: string;
   name: string;
   email: string;
 }
@@ -40,8 +45,9 @@ export const createMember = async (
   name: string,
   { email }: { email?: string } = {},
 ): Promise<Member> => {
-  const id = `e2e_${randomUUID().slice(0, 8)}`;
-  const member = { id, name, email: email ?? `${id}@example.test` };
+  const uid = `${TEST_UID_PREFIX}${randomUUID().slice(0, 8)}`;
+  const id = `f_${uid}`;
+  const member = { id, uid, name, email: email ?? `${uid}@example.test` };
   await stream.upsertUsers([{ id, name }]);
   await Promise.all([
     stream.feeds.getOrCreateFeed({
@@ -69,33 +75,52 @@ export const createMember = async (
   return member;
 };
 
-/** Inicia sesión como `member` en el contexto del navegador. */
-export const loginAs = async (context: BrowserContext, member: Member) => {
-  const response = await auth.handler(
-    new Request(`${E2E_BASE_URL}/api/auth/sign-up/email`, {
+/**
+ * Inicia sesión como `member` en el contexto del navegador. Firebase crea el
+ * usuario al canjear el token propio; correo, nombre y verificación van como
+ * datos del token, así que dos miembros pueden compartir correo (el admin).
+ */
+export const loginAs = async (
+  context: BrowserContext,
+  member: Member,
+  { emailVerified = true }: { emailVerified?: boolean } = {},
+) => {
+  const customToken = await firebase.createCustomToken(member.uid, {
+    email: member.email,
+    email_verified: emailVerified,
+    name: member.name,
+  });
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=${process.env.FIREBASE_API_KEY}`,
+    {
       method: "POST",
-      headers: { "content-type": "application/json", origin: E2E_BASE_URL },
-      body: JSON.stringify({
-        email: member.email,
-        password: randomUUID(),
-        name: member.name,
-        streamId: member.id,
-      }),
-    }),
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ token: customToken, returnSecureToken: true }),
+    },
   );
-  await context.addCookies(
-    response.headers.getSetCookie().map((cookie) => {
-      const [pair = ""] = cookie.split(";");
-      const index = pair.indexOf("=");
-      return {
-        name: pair.slice(0, index),
-        value: pair.slice(index + 1),
-        domain: "localhost",
-        path: "/",
-        httpOnly: true,
-      };
-    }),
-  );
+  if (!response.ok) {
+    // Por ejemplo CONFIGURATION_NOT_FOUND: Authentication sin activar en el
+    // proyecto de pruebas (consola de Firebase → Authentication → Comenzar).
+    const { error } = (await response.json().catch(() => ({}))) as {
+      error?: { message?: string };
+    };
+    throw new Error(
+      `Firebase rechazó el token de prueba: ${response.status} ${error?.message ?? ""}`,
+    );
+  }
+  const { idToken } = (await response.json()) as { idToken: string };
+  const value = await firebase.createSessionCookie(idToken, {
+    expiresIn: 60 * 60 * 1000,
+  });
+  await context.addCookies([
+    {
+      name: SESSION_COOKIE,
+      value,
+      domain: "localhost",
+      path: "/",
+      httpOnly: true,
+    },
+  ]);
 };
 
 /** Publica como `member` directamente en Stream (sin pasar por la UI). */
@@ -181,21 +206,45 @@ export const deleteMemberContent = async (members: Member[]) => {
   );
 };
 
-/** Borra a todos los miembros de prueba (`e2e_*`), en lotes de 100. */
+/**
+ * Borra a todos los miembros de prueba (`f_e2e_*` en Stream, en lotes de 100)
+ * y sus usuarios en Firebase (`e2e_*`).
+ */
 export const deleteAllTestMembers = async () => {
   for (;;) {
     const { users } = await stream.queryUsers({
       payload: {
-        filter_conditions: { id: { $autocomplete: "e2e_" } },
+        filter_conditions: { id: { $autocomplete: TEST_ID_PREFIX } },
         limit: 100,
       },
     });
     const ids = users
       .map((user) => user.id)
-      .filter((id) => id.startsWith("e2e_"));
-    if (ids.length === 0) return;
-    await deleteMemberContent(ids.map((id) => ({ id, name: id, email: "" })));
+      .filter((id) => id.startsWith(TEST_ID_PREFIX));
+    if (ids.length === 0) break;
+    await deleteMemberContent(
+      ids.map((id) => ({ id, uid: id.slice(2), name: id, email: "" })),
+    );
     await stream.deleteUsers({ user_ids: ids, user: "hard" });
-    if (ids.length < 100) return;
+    if (ids.length < 100) break;
+  }
+  await deleteTestFirebaseUsers();
+};
+
+const deleteTestFirebaseUsers = async () => {
+  const uids: string[] = [];
+  let pageToken: string | undefined;
+  do {
+    const page = await firebase.listUsers(1000, pageToken);
+    uids.push(
+      ...page.users
+        .map((user) => user.uid)
+        .filter((uid) => uid.startsWith(TEST_UID_PREFIX)),
+    );
+    pageToken = page.pageToken;
+  } while (pageToken);
+  // `deleteUsers` acepta hasta 1000 por llamada.
+  for (let i = 0; i < uids.length; i += 1000) {
+    await firebase.deleteUsers(uids.slice(i, i + 1000));
   }
 };

@@ -5,6 +5,9 @@ name: E2E
 # PRs desde forks no reciben secrets, así que ahí no corre. Necesita estos
 # secrets del repo:
 #   STREAM_TEST_API_KEY, STREAM_TEST_API_SECRET
+#   FIREBASE_TEST_PROJECT_ID, FIREBASE_TEST_CLIENT_EMAIL,
+#   FIREBASE_TEST_PRIVATE_KEY, FIREBASE_TEST_API_KEY (proyecto de Firebase de
+#   pruebas: las sesiones de los miembros de prueba)
 #   UPSTASH_REDIS_REST_URL, UPSTASH_REDIS_REST_TOKEN (opcionales: sin ellos
 #   se salta la prueba del límite de frecuencia)
 on:
@@ -29,7 +32,10 @@ jobs:
       STREAM_API_SECRET: ${{ secrets.STREAM_TEST_API_SECRET }}
       UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
       UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}
-      BETTER_AUTH_SECRET: e2e-ci-secret-at-least-32-characters-long
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_TEST_PROJECT_ID }}
+      FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_TEST_CLIENT_EMAIL }}
+      FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_TEST_PRIVATE_KEY }}
+      FIREBASE_API_KEY: ${{ secrets.FIREBASE_TEST_API_KEY }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6

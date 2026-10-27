@@ -1,5 +1,4 @@
-// Datos de las páginas legales (/privacy y /terms). Mantener al día: Google
-// los revisa al verificar la pantalla de consentimiento de OAuth.
+// Datos de las páginas legales (/privacy y /terms). Mantener al día.
 import { BRAND } from "@repo/community/brand";
 export const LEGAL = {
   appName: BRAND.name,

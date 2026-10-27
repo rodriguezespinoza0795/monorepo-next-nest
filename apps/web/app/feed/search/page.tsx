@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Stack from "@mui/material/Stack";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
@@ -8,7 +7,7 @@ import { EmptyState } from "@repo/ui/feed/empty-state";
 import { FeedHeader } from "@repo/ui/feed/feed-header";
 import { isUploadedImage } from "@repo/community/attachments";
 import { BRAND } from "@repo/community/brand";
-import { auth } from "../../../lib/auth";
+import { getSession } from "../../../lib/session";
 import { takeRateLimit } from "../../../lib/rate-limit";
 import {
   MAX_QUERY_LENGTH,
@@ -41,7 +40,7 @@ const first = (value: string | string[] | undefined) =>
 export default async function SearchPage({
   searchParams,
 }: PageProps<"/feed/search">) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) redirect("/login");
 
   const params = await searchParams;

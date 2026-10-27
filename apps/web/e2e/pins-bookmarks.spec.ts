@@ -101,6 +101,26 @@ test("un miembro no puede destacar", async ({ page, member, newMember }) => {
   await expect(menuOf(page, `Ajena ${tag}`)).toHaveCount(0);
 });
 
+test("un correo de admin sin verificar no da permisos de admin", async ({
+  page,
+  context,
+  newMember,
+}) => {
+  const tag = randomUUID().slice(0, 6);
+  const other = await newMember("Olga E2E");
+  await postAs(other, `Ajena ${tag}`);
+  // Como una cuenta con contraseña que aún no abre el correo de verificación.
+  const impostor = await createMember("Impostor E2E", {
+    email: E2E_ADMIN_EMAIL,
+  });
+  await context.clearCookies();
+  await loginAs(context, impostor, { emailVerified: false });
+
+  await page.goto("/feed/general");
+  await expect(page.getByText(`Ajena ${tag}`)).toBeVisible();
+  await expect(menuOf(page, `Ajena ${tag}`)).toHaveCount(0);
+});
+
 test("guardar una publicación, verla en Guardados y quitarla", async ({
   page,
   member,

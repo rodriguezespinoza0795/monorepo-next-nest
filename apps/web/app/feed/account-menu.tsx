@@ -1,11 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutlineOutlined";
 import { UserMenu } from "@repo/ui/user-menu";
-import { authClient } from "../../lib/auth-client";
+import { signOut } from "../session-actions";
 import { profileHref } from "../../lib/routes";
 
 // Menú de la cuenta en el encabezado: perfil y cerrar sesión (visible
@@ -15,8 +14,6 @@ export const AccountMenu = ({
 }: {
   user: { id: string; name: string; email: string; image?: string | null };
 }) => {
-  const router = useRouter();
-
   return (
     <UserMenu
       name={user.name}
@@ -32,10 +29,7 @@ export const AccountMenu = ({
         {
           label: "Cerrar sesión",
           icon: <LogoutIcon fontSize="small" />,
-          onClick: async () => {
-            await authClient.signOut();
-            router.push("/login");
-          },
+          onClick: () => void signOut(),
         },
       ]}
     />

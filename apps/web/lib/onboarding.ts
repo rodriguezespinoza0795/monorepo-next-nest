@@ -13,9 +13,9 @@ interface StreamUser {
 }
 
 // Deja listo a un usuario en Stream: perfil de usuario, su `timeline` y sus
-// `notification` (suyos) y su feed de perfil (`profile`, de `system`). Es
-// idempotente: sin base de datos se ejecuta en cada inicio de sesión tras
-// reiniciar el servidor.
+// `notification` (suyos) y su feed de perfil (`profile`, de `system`). Corre
+// en la primera visita al feed (cuando el usuario aún no existe en Stream) y
+// es idempotente, así que un reintento tras un fallo no duplica nada.
 //
 // Solo cuando se crea el timeline se une a todos los espacios; después
 // respeta los que el miembro haya abandonado.

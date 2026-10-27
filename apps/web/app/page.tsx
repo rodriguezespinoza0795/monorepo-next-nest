@@ -13,9 +13,9 @@ import { SiteHeader } from "@repo/ui/site-header";
 
 const steps = [
   {
-    title: "Entra con Google",
+    title: "Entra con tu cuenta",
     description:
-      "Sin contraseñas nuevas: inicias sesión con tu cuenta de Google en un clic.",
+      "La misma cuenta de davidre: Google, correo y contraseña o un enlace mágico. Si ya iniciaste sesión, entras directo.",
   },
   {
     title: "Únete a los espacios",
@@ -101,7 +101,7 @@ export default function Home() {
               </Typography>
 
               <Button variant="contained" size="large" href="/login">
-                Únete con Google →
+                Únete a la comunidad →
               </Button>
             </Stack>
           </Container>

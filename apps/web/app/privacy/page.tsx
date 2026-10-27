@@ -36,10 +36,11 @@ export default function PrivacyPage() {
             content: (
               <>
                 <p>
-                  <strong>De tu cuenta de Google</strong>, al iniciar sesión: tu
-                  nombre, tu correo electrónico, tu foto de perfil y el
-                  identificador de tu cuenta de Google (lo usamos para
-                  reconocerte en cada inicio de sesión). No accedemos a tu
+                  <strong>De tu cuenta de davidre</strong>, la misma con la que
+                  inicias sesión en www.davidre.dev (con Google, con correo y
+                  contraseña o con un enlace mágico): tu nombre, tu correo
+                  electrónico, tu foto de perfil si la tienes y el identificador
+                  de tu cuenta (lo usamos para reconocerte). No accedemos a tu
                   contraseña, a tus contactos ni a ningún otro dato de Google.
                 </p>
                 <p>
@@ -99,7 +100,8 @@ export default function PrivacyPage() {
                 </p>
                 <ul>
                   <li>
-                    <strong>Google</strong>, para el inicio de sesión.
+                    <strong>Google (Firebase Authentication)</strong>, para el
+                    inicio de sesión.
                   </li>
                   <li>
                     <strong>Stream (GetStream)</strong>, que almacena perfiles,
@@ -172,16 +174,14 @@ export default function PrivacyPage() {
                   <li>Una copia de los datos que tenemos sobre ti.</li>
                   <li>
                     Corregirlos (tu nombre y tu foto se toman de tu cuenta de
-                    Google).
+                    davidre).
                   </li>
                   <li>Eliminar tu cuenta y todo tu contenido.</li>
                   <li>Oponerte a algún uso concreto de tus datos.</li>
                 </ul>
                 <p>
                   Escríbenos a {contactEmail} desde el correo de tu cuenta y te
-                  responderemos en un plazo máximo de 30 días. También puedes
-                  revocar el acceso de {appName} desde la configuración de
-                  seguridad de tu cuenta de Google.
+                  responderemos en un plazo máximo de 30 días.
                 </p>
               </>
             ),
@@ -190,9 +190,10 @@ export default function PrivacyPage() {
             title: "Cookies",
             content: (
               <p>
-                Usamos solo cookies técnicas imprescindibles: las de tu sesión y
-                las que protegen el inicio de sesión con Google. No usamos
-                cookies de publicidad ni de analítica de terceros, por lo que no
+                Usamos solo cookies técnicas imprescindibles: la de tu sesión,
+                compartida entre www.davidre.dev y la comunidad para que no
+                tengas que iniciar sesión dos veces. No usamos cookies de
+                publicidad ni de analítica de terceros, por lo que no
                 necesitamos tu consentimiento para ellas; si las bloqueas, no
                 podrás iniciar sesión.
               </p>

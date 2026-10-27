@@ -1,7 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
-import { auth } from "../../lib/auth";
+import { getSession } from "../../lib/session";
 import { getUnreadSpaceIds, markSpaceSeen } from "../../lib/space-activity";
 import { findSpace } from "../../lib/spaces";
 import { reportError } from "../../lib/report-error";
@@ -10,7 +9,7 @@ import { reportError } from "../../lib/report-error";
 // se muestra ningún punto (no es crítico).
 
 export async function getUnreadSpaces(): Promise<string[]> {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) return [];
   return getUnreadSpaceIds(session.user.streamId).catch((error: unknown) => {
     reportError("[stream] no se pudieron leer los espacios nuevos", error);
@@ -21,7 +20,7 @@ export async function getUnreadSpaces(): Promise<string[]> {
 /** Marca el espacio como visto y devuelve los que siguen con novedades. */
 export async function visitSpace(spaceId: string): Promise<string[]> {
   if (typeof spaceId !== "string" || !findSpace(spaceId)) return [];
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) return [];
   const { streamId } = session.user;
   try {

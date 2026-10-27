@@ -31,3 +31,9 @@ export const syncStreamUser = async ({ id, name, image }: UserProfile) => {
     return users[id];
   }
 };
+
+/**
+ * Id en Stream de un usuario de la app principal (su `uid` de Firebase). El
+ * prefijo separa a los miembros de los usuarios propios de Stream (`system`).
+ */
+export const streamUserId = (uid: string) => `f_${uid}`;

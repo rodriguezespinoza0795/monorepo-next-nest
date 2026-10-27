@@ -1,9 +1,7 @@
 "use server";
 
-import { headers } from "next/headers";
-import { isAdmin } from "../../lib/admins";
 import { isUploadedImage } from "@repo/community/attachments";
-import { auth } from "../../lib/auth";
+import { getSession } from "../../lib/session";
 import { EDITED_AT } from "../../lib/edited";
 import { profileFid, SYSTEM_USER_ID, spaceFid } from "../../lib/feeds";
 import { isBanned } from "../../lib/membership";
@@ -23,7 +21,7 @@ const fail = (error: string): ActionResult => ({ ok: false, error });
 
 // Sesión de un miembro que puede participar (no bloqueado).
 const memberSession = async () => {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) return fail("Tu sesión expiró. Vuelve a entrar.");
   if (await isBanned(session.user.streamId)) {
     return fail("Tu cuenta está suspendida.");
@@ -69,7 +67,7 @@ export async function createPost(input: {
 
   const space = findSpace(input.spaceId);
   if (!space) return fail("Ese espacio no existe.");
-  if (!canPostIn(space, isAdmin(session.user.email))) {
+  if (!canPostIn(space, session.user.admin)) {
     return fail(`Solo el equipo puede publicar en ${space.name}.`);
   }
 
@@ -393,7 +391,7 @@ const spaceOf = (activity: { feeds: string[] }) => {
 const adminSession = async () => {
   const session = await memberSession();
   if ("ok" in session) return session;
-  if (!isAdmin(session.user.email)) {
+  if (!session.user.admin) {
     return fail("Solo un administrador puede destacar publicaciones.");
   }
   return session;

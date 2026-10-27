@@ -55,8 +55,9 @@ export default function TermsPage() {
             content: (
               <ul>
                 <li>
-                  Inicias sesión con tu cuenta de Google; eres responsable de lo
-                  que se haga desde ella.
+                  Inicias sesión con tu cuenta de davidre (la de
+                  www.davidre.dev); eres responsable de lo que se haga desde
+                  ella.
                 </li>
                 <li>
                   Debes tener al menos 13 años (o la edad mínima que exija la

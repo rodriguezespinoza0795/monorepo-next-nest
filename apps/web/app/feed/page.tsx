@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { isAdmin } from "../../lib/admins";
-import { auth } from "../../lib/auth";
+import { getSession } from "../../lib/session";
 import { canPostIn, SPACES } from "../../lib/spaces";
 import { FeedHeader } from "@repo/ui/feed/feed-header";
 import { ActivityFeed } from "./activity-feed";
@@ -11,10 +9,10 @@ import { BRAND } from "@repo/community/brand";
 export const metadata: Metadata = { title: `Comunidad · ${BRAND.name}` };
 
 export default async function FeedPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) redirect("/login");
 
-  const admin = isAdmin(session.user.email);
+  const admin = session.user.admin;
   const postableSpaces = SPACES.filter((space) => canPostIn(space, admin)).map(
     ({ id, name }) => ({ id, name }),
   );
