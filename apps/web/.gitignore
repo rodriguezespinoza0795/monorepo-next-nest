@@ -41,3 +41,6 @@ next-env.d.ts
 /.next-e2e/
 /test-results/
 /playwright-report/
+
+# Firebase Admin (cuenta de servicio)
+firebase-*service-account*.json

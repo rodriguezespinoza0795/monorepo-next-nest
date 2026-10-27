@@ -1,5 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { devices } from "@playwright/test";
+import { SESSION_COOKIE } from "@repo/auth/cookie";
+import { E2E_BASE_URL } from "../playwright.config";
 import { expect, test } from "./support/fixtures";
 import { postAs, stream } from "./support/members";
 
@@ -14,6 +16,7 @@ test.describe("menú de la cuenta en móvil", () => {
 
   test("cerrar sesión desde el avatar del encabezado", async ({
     page,
+    context,
     member,
   }) => {
     await page.goto("/feed");
@@ -25,7 +28,11 @@ test.describe("menú de la cuenta en móvil", () => {
       menu.getByRole("menuitem", { name: "Mi perfil" }),
     ).toBeVisible();
     await menu.getByRole("menuitem", { name: "Cerrar sesión" }).click();
-    await expect(page).toHaveURL(/\/login$/);
+    await expect(page).toHaveURL(`${E2E_BASE_URL}/`);
+    const cookies = await context.cookies();
+    expect(cookies.some((cookie) => cookie.name === SESSION_COOKIE)).toBe(
+      false,
+    );
   });
 });
 

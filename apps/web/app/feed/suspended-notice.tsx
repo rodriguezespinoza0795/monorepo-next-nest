@@ -1,17 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Button from "@mui/material/Button";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import BlockIcon from "@mui/icons-material/Block";
 import { EmptyState } from "@repo/ui/feed/empty-state";
-import { authClient } from "../../lib/auth-client";
+import { signOut } from "../session-actions";
 
 // Lo que ve un miembro bloqueado desde el panel de moderación.
 export const SuspendedNotice = () => {
-  const router = useRouter();
   const [pending, setPending] = useState(false);
 
   return (
@@ -27,8 +25,7 @@ export const SuspendedNotice = () => {
           disabled={pending}
           onClick={async () => {
             setPending(true);
-            await authClient.signOut();
-            router.push("/login");
+            await signOut();
           }}
         >
           Cerrar sesión

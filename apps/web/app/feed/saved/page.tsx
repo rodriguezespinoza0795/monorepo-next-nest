@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -8,7 +7,7 @@ import { isUploadedImage } from "@repo/community/attachments";
 import { BRAND } from "@repo/community/brand";
 import { EmptyState } from "@repo/ui/feed/empty-state";
 import { FeedHeader } from "@repo/ui/feed/feed-header";
-import { auth } from "../../../lib/auth";
+import { getSession } from "../../../lib/session";
 import { SPACES } from "../../../lib/spaces";
 import { stream } from "../../../lib/stream";
 import { SavedList, type SavedPost } from "./saved-list";
@@ -27,7 +26,7 @@ const spaceNames = new Map(
 export default async function SavedPage({
   searchParams,
 }: PageProps<"/feed/saved">) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) redirect("/login");
 
   const { next } = await searchParams;

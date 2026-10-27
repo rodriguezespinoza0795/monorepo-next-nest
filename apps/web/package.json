@@ -21,6 +21,7 @@
     "@mui/icons-material": "^9.4.0",
     "@mui/material": "^9.4.0",
     "@mui/material-nextjs": "^9.4.0",
+    "@repo/auth": "workspace:*",
     "@repo/community": "workspace:*",
     "@repo/ui": "workspace:*",
     "@sentry/nextjs": "^11.6.0",
@@ -28,7 +29,6 @@
     "@stream-io/node-sdk": "^0.8.11",
     "@upstash/ratelimit": "^2.2.0",
     "@upstash/redis": "^1.39.0",
-    "better-auth": "^1.7.7",
     "next": "16.3.4",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -42,6 +42,7 @@
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.5",
     "eslint": "10.9.1",
+    "firebase-admin": "^14.5.0",
     "typescript": "7.0.2"
   }
 }

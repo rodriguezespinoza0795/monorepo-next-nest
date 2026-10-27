@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { ProfileHeader } from "@repo/ui/feed/profile-header";
-import { auth } from "../../../../lib/auth";
+import { getSession } from "../../../../lib/session";
 import { SYSTEM_USER_ID } from "../../../../lib/feeds";
 import { getOrCreateOwnedFeed } from "../../../../lib/owned-feed";
 import { stream } from "../../../../lib/stream";
@@ -30,7 +29,7 @@ export async function generateMetadata({
 export default async function ProfilePage({
   params,
 }: PageProps<"/feed/u/[id]">) {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const session = await getSession();
   if (!session) redirect("/login");
 
   const id = decodeURIComponent((await params).id);
