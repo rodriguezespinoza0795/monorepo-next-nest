@@ -14,7 +14,11 @@ export const startSession = async (
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ idToken }),
   });
-  if (!response.ok) throw new Error("session");
+  // El servidor no aceptó el token (por ejemplo, `FIREBASE_*` de otro proyecto
+  // que el del navegador).
+  if (!response.ok) {
+    throw Object.assign(new Error("session"), { code: "session" });
+  }
   window.location.assign(next);
 };
 
@@ -33,14 +37,23 @@ const MESSAGES: Record<string, string> = {
   "auth/account-exists-with-different-credential":
     "Ese correo ya tiene una cuenta con otro método de acceso.",
   "auth/network-request-failed": "Sin conexión. Revisa tu internet.",
+  "auth/unauthorized-domain":
+    "Este sitio no está autorizado para iniciar sesión. Avisa al equipo.",
+  "auth/unauthorized-continue-uri":
+    "Este sitio no está autorizado para el enlace mágico. Avisa al equipo.",
+  "auth/operation-not-allowed":
+    "Este método de acceso no está activado. Prueba otro o avisa al equipo.",
+  session:
+    "Iniciaste sesión, pero no pudimos guardarla. Inténtalo de nuevo o avisa al equipo.",
 };
 
-// Mensaje en español para un error de Firebase (o del servidor).
+// Mensaje en español para un error de Firebase (o del servidor). Si no lo
+// conocemos, se muestra su código para poder diagnosticarlo.
 export const authErrorMessage = (error: unknown) => {
   const code = (error as { code?: string } | null)?.code;
-  return (
-    (code && MESSAGES[code]) || "No pudimos iniciar sesión. Inténtalo de nuevo."
-  );
+  if (code && MESSAGES[code]) return MESSAGES[code];
+  const detail = code ? ` (${code})` : "";
+  return `No pudimos iniciar sesión. Inténtalo de nuevo.${detail}`;
 };
 
 // Si el usuario cerró la ventana de Google, no es un error que mostrar.
