@@ -1,37 +1,42 @@
 import type { Metadata } from "next";
-import { headers } from "next/headers";
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Box from "@mui/material/Box";
+import Button from "@mui/material/Button";
+import { SESSION_COOKIE } from "@repo/auth/cookie";
+import { appLoginUrl, safeReturnPath } from "@repo/auth/session";
+import { EmptyState } from "@repo/ui/feed/empty-state";
 import { SiteHeader } from "@repo/ui/site-header";
-import { auth } from "../../lib/auth";
-import { LoginForm } from "./login-form";
 import { ADMIN_BRAND } from "@repo/community/brand";
+import { reportWarning } from "../../lib/report-error";
+import { getSession } from "../../lib/session";
 
 export const metadata: Metadata = { title: `Acceder · ${ADMIN_BRAND}` };
 
-const accentGlow =
-  "radial-gradient(ellipse 60% 50% at 50% 40%, rgba(99, 102, 241, 0.22), transparent 70%)";
+// El login vive en la app principal: aquí solo se redirige allá, o a `next`
+// si ya hay sesión.
+export default async function LoginPage({ searchParams }: PageProps<"/login">) {
+  const path = safeReturnPath((await searchParams).next, "/moderacion");
+  if (await getSession()) redirect(path);
+  if (!(await cookies()).has(SESSION_COOKIE)) redirect(appLoginUrl(path));
 
-export default async function LoginPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
-  if (session) redirect("/moderacion");
-
+  // Hay cookie pero no es válida aquí: redirigir haría un bucle con la app
+  // principal si ella sí la acepta (por ejemplo, otro proyecto de Firebase).
+  reportWarning("[auth] cookie de sesión presente pero no válida");
   return (
     <>
       <SiteHeader brand={ADMIN_BRAND} action={{ label: "Inicio", href: "/" }} />
       <Box
         component="main"
-        sx={{
-          minHeight: "100svh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          px: 2,
-          py: 12,
-          backgroundImage: accentGlow,
-        }}
+        sx={{ px: 2, pt: { xs: 12, sm: 16 }, pb: 8, textAlign: "center" }}
       >
-        <LoginForm />
+        <EmptyState
+          title="No pudimos validar tu sesión"
+          description="Vuelve a iniciar sesión. Si el problema sigue, avisa al equipo."
+        />
+        <Button variant="contained" href={appLoginUrl(path)} sx={{ mt: 2 }}>
+          Iniciar sesión
+        </Button>
       </Box>
     </>
   );

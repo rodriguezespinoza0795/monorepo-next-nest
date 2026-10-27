@@ -4,25 +4,22 @@ import { redirect } from "next/navigation";
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import { SESSION_COOKIE } from "@repo/auth/cookie";
+import { appLoginUrl, safeReturnPath } from "@repo/auth/session";
 import { EmptyState } from "@repo/ui/feed/empty-state";
 import { SiteHeader } from "@repo/ui/site-header";
 import { BRAND } from "@repo/community/brand";
 import { reportWarning } from "../../lib/report-error";
-import {
-  communityLoginUrl,
-  getSession,
-  safeReturnPath,
-} from "../../lib/session";
+import { getSession } from "../../lib/session";
 
 export const metadata: Metadata = { title: `Acceder · ${BRAND.name}` };
 
 // El login vive en la app principal: aquí solo se redirige allá, o a `next`
 // si ya hay sesión.
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
-  const path = safeReturnPath((await searchParams).next);
+  const path = safeReturnPath((await searchParams).next, "/feed");
   if (await getSession()) redirect(path);
 
-  const loginUrl = communityLoginUrl(path);
+  const loginUrl = appLoginUrl(path);
   if (!(await cookies()).has(SESSION_COOKIE)) redirect(loginUrl);
 
   // Hay cookie pero no es válida aquí. Si la app principal sí la acepta (por

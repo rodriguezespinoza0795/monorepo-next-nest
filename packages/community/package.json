@@ -18,6 +18,7 @@
     "typescript": "7.0.2"
   },
   "dependencies": {
+    "@repo/auth": "workspace:*",
     "@stream-io/node-sdk": "^0.8.11",
     "server-only": "^0.0.1"
   }

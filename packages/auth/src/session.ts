@@ -24,3 +24,18 @@ export const loginUrl = (returnTo: string) => {
   url.searchParams.set("next", returnTo);
   return url.toString();
 };
+
+/** Ruta propia a la que volver tras el login (`next`), o `fallback`. */
+export const safeReturnPath = (next: unknown, fallback: string) =>
+  typeof next === "string" &&
+  next.startsWith("/") &&
+  !next.startsWith("//") &&
+  !next.startsWith("/\\")
+    ? next
+    : fallback;
+
+/** Login de la app principal que vuelve a `path` de esta app (`APP_URL`). */
+export const appLoginUrl = (path: string) =>
+  loginUrl(
+    new URL(path, process.env.APP_URL || "http://localhost:3000").toString(),
+  );
