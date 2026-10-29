@@ -7,9 +7,11 @@ import CardActionArea from "@mui/material/CardActionArea";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
 
+// En UTC: el servidor y el navegador deben dar el mismo mes al hidratar.
 const joinedFormat = new Intl.DateTimeFormat("es", {
   month: "long",
   year: "numeric",
+  timeZone: "UTC",
 });
 
 export interface MemberSummary {

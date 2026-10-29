@@ -13,9 +13,11 @@ interface ProfileHeaderProps {
   isMe?: boolean;
 }
 
+// En UTC: el servidor y el navegador deben dar el mismo mes al hidratar.
 const monthYear = new Intl.DateTimeFormat("es", {
   month: "long",
   year: "numeric",
+  timeZone: "UTC",
 });
 
 export const ProfileHeader = ({
